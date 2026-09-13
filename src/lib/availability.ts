@@ -248,14 +248,18 @@ export async function getAvailability(params: {
 
 // Parse a TIME string ("08:30") in Europe/Prague, return as UTC Date on the given date.
 function parsePragueTime(dateStr: string, timeStr: string): Date {
-  // Use the Intl API to get the Prague UTC offset for the given date.
-  const naive = new Date(`${dateStr}T${timeStr}:00`);
-  // Cheap but correct for our purposes: format the date in Prague timezone and
-  // compute the offset from UTC.
-  const pragueStr = naive.toLocaleString("en-CA", { timeZone: "Europe/Prague", hour12: false });
-  const pragueDate = new Date(pragueStr + " UTC");
-  const offsetMs = pragueDate.getTime() - naive.getTime();
-  return new Date(naive.getTime() - offsetMs);
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const [h, m] = timeStr.split(":").map(Number);
+  // Determine Prague UTC offset by inspecting noon on that day (safe from DST transitions).
+  const noonUtc = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  const parts = new Intl.DateTimeFormat("en", {
+    timeZone: "Europe/Prague",
+    hour: "2-digit",
+    hour12: false,
+  }).formatToParts(noonUtc);
+  const pragueNoonHour = Number(parts.find((p) => p.type === "hour")!.value);
+  const offsetHours = pragueNoonHour - 12; // +1 CET, +2 CEST
+  return new Date(Date.UTC(year, month - 1, day, h - offsetHours, m, 0));
 }
 
 function minutesBetween(a: Date, b: Date): number {
