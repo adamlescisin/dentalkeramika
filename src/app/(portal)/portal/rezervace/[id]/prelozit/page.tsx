@@ -7,16 +7,21 @@ import { useRouter, useParams } from "next/navigation";
 type Slot = { start: string; end: string };
 type DayResult = { date: string; slots: string[]; closed: boolean };
 
-function startOfLocalDay(d: Date) {
+function startOfLocalDay(d: Date): Date {
+  const pragueDateStr = d.toLocaleDateString("en-CA", { timeZone: "Europe/Prague" });
+  return new Date(pragueDateStr + "T00:00:00Z");
+}
+
+function addDays(d: Date, n: number): Date {
   const out = new Date(d);
-  out.setHours(0, 0, 0, 0);
+  out.setUTCDate(out.getUTCDate() + n);
   return out;
 }
 
-function addDays(d: Date, n: number) {
-  const out = new Date(d);
-  out.setDate(out.getDate() + n);
-  return out;
+function mondayOfWeek(d: Date): Date {
+  const day = d.getUTCDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  return addDays(d, diff);
 }
 
 function fmtTime(iso: string) {
@@ -111,7 +116,7 @@ export default function PrelozitPage() {
   }, [serviceId]);
 
   const today = startOfLocalDay(new Date());
-  const weekStart = addDays(today, weekOffset * 7);
+  const weekStart = addDays(mondayOfWeek(today), weekOffset * 7);
   const weekEnd = addDays(weekStart, 7);
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 

@@ -44,16 +44,24 @@ function formatDayHeader(iso: string) {
   };
 }
 
-function startOfDay(d: Date) {
+// Returns UTC midnight of the given date in Prague timezone, so weekday
+// arithmetic and toISOString() give the correct date even from a UTC+2 browser.
+function startOfDay(d: Date): Date {
+  const pragueDateStr = d.toLocaleDateString("en-CA", { timeZone: "Europe/Prague" });
+  return new Date(pragueDateStr + "T00:00:00Z");
+}
+
+function addDays(d: Date, n: number): Date {
   const out = new Date(d);
-  out.setHours(0, 0, 0, 0);
+  out.setUTCDate(out.getUTCDate() + n);
   return out;
 }
 
-function addDays(d: Date, n: number) {
-  const out = new Date(d);
-  out.setDate(out.getDate() + n);
-  return out;
+// Snap to Monday of the week (Czech/EU first day of week).
+function mondayOfWeek(d: Date): Date {
+  const day = d.getUTCDay(); // 0=Sun … 6=Sat
+  const diff = day === 0 ? -6 : 1 - day;
+  return addDays(d, diff);
 }
 
 function isoDay(d: Date) {
@@ -117,9 +125,9 @@ export default function BookingWizard({
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
   const [confirmedStatus, setConfirmedStatus] = useState<string | null>(null);
 
-  // Week window
+  // Week window — always starts on Monday (Czech/EU convention)
   const today = startOfDay(new Date());
-  const weekStart = addDays(today, weekOffset * 7);
+  const weekStart = addDays(mondayOfWeek(today), weekOffset * 7);
   const weekEnd = addDays(weekStart, 7);
 
   const fetchSlots = useCallback(async () => {
