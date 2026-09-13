@@ -1,0 +1,356 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "../../../../../../db";
+import {
+  dk_users,
+  dk_accounts,
+  dk_account_users,
+  dk_locations,
+} from "../../../../../../db/schema";
+import { eq } from "drizzle-orm";
+import {
+  hashPassword,
+  verifyPassword,
+  createSession,
+  buildSessionCookie,
+  clearSessionCookie,
+  createAuthToken,
+  consumeAuthToken,
+  invalidateAllUserSessions,
+  checkLoginRateLimit,
+  isPasswordPwned,
+  getSessionFromCookies,
+} from "../../../../../lib/auth";
+import {
+  sendVerificationEmail,
+  sendMagicLink,
+  sendPasswordReset,
+} from "../../../../../lib/email";
+
+export const dynamic = "force-dynamic";
+
+// All auth actions come through POST with action in the URL path or body.
+// Routes: POST /dk/v1/auth/login | magic-link | reset | verify | register
+
+export async function POST(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  const action = pathname.split("/").pop();
+
+  switch (action) {
+    case "login":
+      return handleLogin(req);
+    case "magic-link":
+      return handleMagicLink(req);
+    case "reset":
+      return handleReset(req);
+    case "verify":
+      return handleVerify(req);
+    case "register":
+      return handleRegister(req);
+    case "logout":
+      return handleLogout(req);
+    default:
+      return NextResponse.json({ error: "Unknown auth action" }, { status: 404 });
+  }
+}
+
+// ─── Login ────────────────────────────────────────────────────────────────────
+
+async function handleLogin(req: NextRequest) {
+  const body = await req.json();
+  const { email, password, staySignedIn } = body;
+
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+
+  const allowed = await checkLoginRateLimit(email, ip);
+  // Return same message for unknown address to avoid enumeration
+  const genericError = "Nesprávný e-mail nebo heslo.";
+
+  if (!allowed) {
+    return NextResponse.json({ error: genericError }, { status: 429 });
+  }
+
+  const [user] = await db
+    .select()
+    .from(dk_users)
+    .where(eq(dk_users.email, email.toLowerCase().trim()))
+    .limit(1);
+
+  if (!user || !user.password_hash) {
+    return NextResponse.json({ error: genericError }, { status: 401 });
+  }
+
+  const valid = await verifyPassword(password, user.password_hash);
+  if (!valid) {
+    return NextResponse.json({ error: genericError }, { status: 401 });
+  }
+
+  if (!user.email_verified_at) {
+    return NextResponse.json(
+      { error: "Před přihlášením je nutné ověřit e-mail." },
+      { status: 403 }
+    );
+  }
+
+  const deviceHint =
+    req.headers.get("user-agent")?.slice(0, 200) ?? undefined;
+  const jwt = await createSession(user.id, deviceHint);
+
+  const res = NextResponse.json({ ok: true });
+  res.headers.set("Set-Cookie", buildSessionCookie(jwt));
+  return res;
+}
+
+// ─── Magic link request ───────────────────────────────────────────────────────
+
+async function handleMagicLink(req: NextRequest) {
+  const { email } = await req.json();
+
+  const [user] = await db
+    .select()
+    .from(dk_users)
+    .where(eq(dk_users.email, email.toLowerCase().trim()))
+    .limit(1);
+
+  // Always 200 — no enumeration
+  if (!user) {
+    return NextResponse.json({ ok: true });
+  }
+
+  const token = await createAuthToken(user.id, "magic_link", 15);
+  const url = `${process.env.NEXT_PUBLIC_APP_URL}/prihlasit?token=${token}&type=magic`;
+
+  await sendMagicLink(user.email, url);
+  return NextResponse.json({ ok: true });
+}
+
+// ─── Magic link / reset token verification ────────────────────────────────────
+
+async function handleVerify(req: NextRequest) {
+  const { token, type, newPassword } = await req.json();
+
+  if (type === "magic") {
+    const result = await consumeAuthToken(token, "magic_link");
+    if (!result) {
+      return NextResponse.json(
+        { error: "Odkaz je neplatný nebo vypršel." },
+        { status: 400 }
+      );
+    }
+
+    const jwt = await createSession(result.userId);
+    const res = NextResponse.json({ ok: true });
+    res.headers.set("Set-Cookie", buildSessionCookie(jwt));
+    return res;
+  }
+
+  if (type === "reset") {
+    if (!newPassword || newPassword.length < 10) {
+      return NextResponse.json(
+        { error: "Heslo musí mít alespoň 10 znaků." },
+        { status: 400 }
+      );
+    }
+
+    const pwned = await isPasswordPwned(newPassword);
+    if (pwned) {
+      return NextResponse.json(
+        { error: "Toto heslo bylo kompromitováno — zvolte prosím jiné." },
+        { status: 400 }
+      );
+    }
+
+    const result = await consumeAuthToken(token, "reset");
+    if (!result) {
+      return NextResponse.json(
+        { error: "Odkaz je neplatný nebo vypršel." },
+        { status: 400 }
+      );
+    }
+
+    const hash = await hashPassword(newPassword);
+    await db
+      .update(dk_users)
+      .set({ password_hash: hash, updated_at: new Date() })
+      .where(eq(dk_users.id, result.userId));
+
+    await invalidateAllUserSessions(result.userId);
+
+    return NextResponse.json({ ok: true });
+  }
+
+  if (type === "verify_email") {
+    const result = await consumeAuthToken(token, "verify_email");
+    if (!result) {
+      return NextResponse.json(
+        { error: "Odkaz je neplatný nebo vypršel." },
+        { status: 400 }
+      );
+    }
+
+    await db
+      .update(dk_users)
+      .set({ email_verified_at: new Date(), updated_at: new Date() })
+      .where(eq(dk_users.id, result.userId));
+
+    return NextResponse.json({ ok: true });
+  }
+
+  return NextResponse.json({ error: "Unknown verification type" }, { status: 400 });
+}
+
+// ─── Password reset request ───────────────────────────────────────────────────
+
+async function handleReset(req: NextRequest) {
+  const { email } = await req.json();
+
+  const [user] = await db
+    .select()
+    .from(dk_users)
+    .where(eq(dk_users.email, email.toLowerCase().trim()))
+    .limit(1);
+
+  // Always 200 — no enumeration
+  if (!user) {
+    return NextResponse.json({ ok: true });
+  }
+
+  const token = await createAuthToken(user.id, "reset", 60);
+  const url = `${process.env.NEXT_PUBLIC_APP_URL}/obnova-hesla?token=${token}`;
+
+  await sendPasswordReset(user.email, url);
+  return NextResponse.json({ ok: true });
+}
+
+// ─── Registration (two-step) ──────────────────────────────────────────────────
+
+async function handleRegister(req: NextRequest) {
+  const body = await req.json();
+  const {
+    firstName,
+    lastName,
+    email,
+    phone,
+    password,
+    practiceName,
+    ico,
+    billingEmail,
+    locationStreet,
+    locationCity,
+    locationZip,
+    locationLabel,
+    locationAccessNote,
+  } = body;
+
+  // Basic validation
+  if (
+    !firstName ||
+    !lastName ||
+    !email ||
+    !password ||
+    !practiceName
+  ) {
+    return NextResponse.json(
+      { error: "Vyplňte všechna povinná pole." },
+      { status: 400 }
+    );
+  }
+
+  if (password.length < 10) {
+    return NextResponse.json(
+      { error: "Heslo musí mít alespoň 10 znaků." },
+      { status: 400 }
+    );
+  }
+
+  const pwned = await isPasswordPwned(password);
+  if (pwned) {
+    return NextResponse.json(
+      { error: "Toto heslo bylo kompromitováno — zvolte prosím jiné." },
+      { status: 400 }
+    );
+  }
+
+  // Check email uniqueness
+  const [existing] = await db
+    .select({ id: dk_users.id })
+    .from(dk_users)
+    .where(eq(dk_users.email, email.toLowerCase().trim()))
+    .limit(1);
+
+  if (existing) {
+    // Return generic message to avoid enumeration
+    return NextResponse.json({ ok: true });
+  }
+
+  const hash = await hashPassword(password);
+
+  // Create user
+  const [user] = await db
+    .insert(dk_users)
+    .values({
+      email: email.toLowerCase().trim(),
+      password_hash: hash,
+      first_name: firstName,
+      last_name: lastName,
+      phone: phone ?? null,
+    })
+    .returning({ id: dk_users.id, email: dk_users.email });
+
+  // Create account (practice)
+  const [account] = await db
+    .insert(dk_accounts)
+    .values({
+      name: practiceName,
+      ico: ico ?? null,
+      billing_email: billingEmail ?? email.toLowerCase().trim(),
+      status: "pending",
+    })
+    .returning({ id: dk_accounts.id });
+
+  // Link user as owner
+  await db.insert(dk_account_users).values({
+    account_id: account.id,
+    user_id: user.id,
+    role: "owner",
+    status: "active",
+    accepted_at: new Date(),
+  });
+
+  // Create first location if provided
+  if (locationStreet && locationCity && locationZip) {
+    await db.insert(dk_locations).values({
+      account_id: account.id,
+      label: locationLabel ?? practiceName,
+      street: locationStreet,
+      city: locationCity,
+      zip: locationZip,
+      access_note: locationAccessNote ?? null,
+      is_default: true,
+    });
+  }
+
+  // Send verification email
+  const verifyToken = await createAuthToken(user.id, "verify_email", 60);
+  const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/dk/v1/auth/verify?token=${verifyToken}&type=verify_email`;
+  await sendVerificationEmail(user.email, verifyUrl);
+
+  return NextResponse.json({ ok: true });
+}
+
+// ─── Logout ───────────────────────────────────────────────────────────────────
+
+async function handleLogout(_req: NextRequest) {
+  const session = await getSessionFromCookies();
+  if (session) {
+    const { db: dbModule } = await import("../../../../../../db");
+    const { dk_sessions } = await import("../../../../../../db/schema");
+    await dbModule
+      .delete(dk_sessions)
+      .where(eq(dk_sessions.id, session.sessionId));
+  }
+
+  const res = NextResponse.json({ ok: true });
+  res.headers.set("Set-Cookie", clearSessionCookie());
+  return res;
+}

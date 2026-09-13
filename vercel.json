@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/warm-db",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/reconcile",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/backup",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

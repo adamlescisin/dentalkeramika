@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --cyan: #0697BC;
+    --cyan-deep: #046B87;
+    --ink: #23323D;
+    --porcelain: #F1F5F6;
+    --line: #D6E0E4;
+    --status-confirmed: #1B7F5E;
+    --status-pending: #B5761D;
+    --status-cancelled: #AE4330;
+  }
+
+  html {
+    font-family: 'Archivo Variable', system-ui, sans-serif;
+    background-color: var(--porcelain);
+    color: var(--ink);
+  }
+
+  h1, h2, h3, h4 {
+    font-variation-settings: 'wdth' 112;
+    letter-spacing: -0.02em;
+  }
+
+  body {
+    font-variation-settings: 'wdth' 100;
+  }
+}
