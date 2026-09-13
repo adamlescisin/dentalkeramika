@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../../../../db";
 import { dk_services, dk_technicians } from "../../../../../../db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { getAvailability } from "../../../../../lib/availability";
 import { getSessionFromCookies } from "../../../../../lib/auth";
 
@@ -84,10 +84,12 @@ export async function GET(req: NextRequest) {
     }
     googleCalendarId = tech.google_calendar_id ?? undefined;
   } else {
+    // Prefer technicians with a Google Calendar connected; fall back to any active one.
     const [tech] = await db
       .select()
       .from(dk_technicians)
       .where(eq(dk_technicians.active, true))
+      .orderBy(sql`CASE WHEN ${dk_technicians.google_calendar_id} IS NOT NULL THEN 0 ELSE 1 END`)
       .limit(1);
     if (!tech) {
       return NextResponse.json(
