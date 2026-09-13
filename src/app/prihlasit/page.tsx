@@ -13,12 +13,38 @@ export default function LoginPage() {
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
+
+    if (p.get("token") && p.get("type") === "magic") {
+      // Auto-consume magic link token
+      setLoading(true);
+      fetch("/api/dk/v1/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: p.get("token"), type: "magic" }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.ok) {
+            const next = p.get("next") ?? "/portal/dashboard";
+            router.replace(next);
+          } else {
+            setBanner(data.error ?? "Odkaz je neplatný nebo vypršel.");
+            setLoading(false);
+          }
+        })
+        .catch(() => {
+          setBanner("Síťová chyba — zkuste to znovu.");
+          setLoading(false);
+        });
+      return;
+    }
+
     if (p.get("verified") === "1") {
       setBanner("E-mail ověřen. Nyní se můžete přihlásit.");
     } else if (p.get("error") === "link_expired") {
-      setBanner("Odkaz vypršel nebo byl již použit. Zaregistrujte se znovu.");
+      setBanner("Odkaz vypršel nebo byl již použit.");
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +88,18 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // While consuming a magic link token, show a spinner instead of the form
+  if (loading && typeof window !== "undefined" && new URLSearchParams(window.location.search).get("type") === "magic") {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--porcelain)" }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: "var(--cyan)" }} />
+          <p className="text-sm" style={{ color: "#6b7f8a" }}>Přihlašuji…</p>
+        </div>
+      </main>
+    );
   }
 
   return (
