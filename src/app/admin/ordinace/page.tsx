@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type Account = {
   id: string; name: string; ico: string | null; dic: string | null;
@@ -31,6 +32,7 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
 };
 
 export default function AdminOrdinace() {
+  const router = useRouter();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -90,7 +92,14 @@ export default function AdminOrdinace() {
                       {a.approved_at && ` · schváleno ${new Date(a.approved_at).toLocaleDateString("cs-CZ")}`}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                    <button
+                      onClick={() => router.push(`/admin/ordinace/${a.id}`)}
+                      className="text-xs font-medium px-3 py-1.5 rounded-lg border"
+                      style={{ borderColor: "var(--line)", color: "var(--cyan-deep)" }}
+                    >
+                      Detail
+                    </button>
                     <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={colors}>{STATUS_LABELS[a.status] ?? a.status}</span>
                     {a.status === "pending" && (
                       <button onClick={() => setStatus(a.id, "active")} disabled={busy === a.id}
