@@ -167,7 +167,15 @@ export default async function ReservaceDetailPage({
                   <span className="text-sm" style={{ color: "var(--ink)" }}>
                     {ev.type === "created" ? "Rezervace vytvořena" :
                      ev.type === "confirmed" ? "Potvrzeno" :
-                     ev.type === "rescheduled" ? "Přeloženo" :
+                     ev.type === "rescheduled" ? (() => {
+                       try {
+                         const to = JSON.parse(ev.to_json ?? "{}");
+                         if (to.starts_at) {
+                           return `Přeloženo na ${fmt(new Date(to.starts_at), { weekday: "short", day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}`;
+                         }
+                       } catch { /* ignore */ }
+                       return "Přeloženo";
+                     })() :
                      ev.type === "cancelled" ? "Zrušeno" :
                      ev.type}
                   </span>

@@ -83,7 +83,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
   }
 
-  if (!["pending", "confirmed"].includes(reservation.status)) {
+  if (!["pending", "confirmed", "rescheduled"].includes(reservation.status)) {
     return NextResponse.json(
       { error: "Reservation cannot be rescheduled in its current state" },
       { status: 409 }
@@ -142,8 +142,9 @@ export async function PATCH(
 
   const oldStart = reservation.starts_at;
 
+  let updated: { id: string }[];
   try {
-    await db
+    updated = await db
       .update(dk_reservations)
       .set({
         starts_at: newStart,
@@ -154,12 +155,8 @@ export async function PATCH(
         reschedule_count: (reservation.reschedule_count ?? 0) + 1,
         updated_at: new Date(),
       })
-      .where(
-        and(
-          eq(dk_reservations.id, id),
-          eq(dk_reservations.updated_at, reservation.updated_at)
-        )
-      );
+      .where(eq(dk_reservations.id, id))
+      .returning({ id: dk_reservations.id });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "";
     if (msg.includes("dk_reservations_no_overlap")) {
@@ -169,6 +166,10 @@ export async function PATCH(
       );
     }
     throw err;
+  }
+
+  if (updated.length === 0) {
+    return NextResponse.json({ error: "Reservation not found" }, { status: 404 });
   }
 
   await db.insert(dk_reservation_events).values({
