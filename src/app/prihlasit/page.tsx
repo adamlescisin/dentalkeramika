@@ -15,6 +15,8 @@ export default function LoginPage() {
     const p = new URLSearchParams(window.location.search);
     if (p.get("verified") === "1") {
       setBanner("E-mail ověřen. Nyní se můžete přihlásit.");
+    } else if (p.get("banner") === "password_reset") {
+      setBanner("Heslo bylo změněno. Přihlaste se novým heslem.");
     } else if (p.get("error") === "link_expired" || p.get("error") === "invalid_link") {
       setBanner("Odkaz vypršel nebo byl již použit.");
     }
