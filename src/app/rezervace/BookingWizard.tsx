@@ -303,10 +303,14 @@ export default function BookingWizard({
                   disabled={isPending}
                   onClick={() => {
                     setService(svc);
-                    setStep("slot");
+                    // If only one location, skip straight to slot picker
+                    if (locations.length <= 1) setStep("slot");
                   }}
                   className="text-left bg-white border rounded-xl px-5 py-4 hover:border-[var(--cyan)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ borderColor: "var(--line)" }}
+                  style={{
+                    borderColor: service?.id === svc.id ? "var(--cyan)" : "var(--line)",
+                    boxShadow: service?.id === svc.id ? "0 0 0 1px var(--cyan)" : undefined,
+                  }}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
@@ -329,6 +333,41 @@ export default function BookingWizard({
                 </button>
               ))}
             </div>
+
+            {/* Location picker — shown after service is selected, only when multiple locations */}
+            {service && locations.length > 1 && (
+              <div className="mt-6 bg-white border rounded-xl px-5 py-4 flex flex-col gap-3" style={{ borderColor: "var(--line)" }}>
+                <div>
+                  <label className="block text-sm font-semibold mb-1.5" style={{ color: "var(--ink)" }}>
+                    Ordinace
+                  </label>
+                  <p className="text-xs mb-2" style={{ color: "#6b7f8a" }}>Vyberte, ze které ordinace skenování proběhne.</p>
+                  <select
+                    value={location?.id ?? ""}
+                    onChange={(e) => setLocation(locations.find((l) => l.id === e.target.value) ?? null)}
+                    className="w-full border rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2"
+                    style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                  >
+                    <option value="" disabled>— Vyberte ordinaci —</option>
+                    {locations.map((loc) => (
+                      <option key={loc.id} value={loc.id}>
+                        {loc.label} — {loc.street}, {loc.city}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    disabled={!location}
+                    onClick={() => setStep("slot")}
+                    className="px-5 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-40"
+                    style={{ background: "var(--cyan)" }}
+                  >
+                    Vybrat termín →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
