@@ -581,35 +581,6 @@ export default function ProfilClient({
         <LocationsSection initialLocations={locations} isOwner={isOwner} />
         <TeamSection initialTeam={team} isOwner={isOwner} />
 
-        {isOwner && (
-          <section>
-            <h2 className="text-lg font-bold mb-3" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
-              Správa
-            </h2>
-            <div className="bg-white rounded-xl border divide-y overflow-hidden" style={{ borderColor: "var(--line)" }}>
-              <Link
-                href="/portal/admin/pracovni-doba"
-                className="flex items-center justify-between px-5 py-4 hover:bg-[#f8fafb] transition-colors"
-              >
-                <div>
-                  <p className="text-sm font-semibold" style={{ color: "var(--ink)" }}>Pracovní doba</p>
-                  <p className="text-xs mt-0.5" style={{ color: "#6b7f8a" }}>Nastavit dostupné hodiny techniků</p>
-                </div>
-                <span style={{ color: "#b0bec5" }}>→</span>
-              </Link>
-              <Link
-                href="/portal/admin/kalendar"
-                className="flex items-center justify-between px-5 py-4 hover:bg-[#f8fafb] transition-colors"
-              >
-                <div>
-                  <p className="text-sm font-semibold" style={{ color: "var(--ink)" }}>Google Kalendář</p>
-                  <p className="text-xs mt-0.5" style={{ color: "#6b7f8a" }}>Propojit s kalendářem technika</p>
-                </div>
-                <span style={{ color: "#b0bec5" }}>→</span>
-              </Link>
-            </div>
-          </section>
-        )}
       </div>
     </main>
   );

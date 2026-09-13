@@ -1,68 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../../../../db";
-import { dk_account_users, dk_technicians, dk_working_hours } from "../../../../../../db/schema";
+import { dk_technicians, dk_working_hours } from "../../../../../../db/schema";
 import { eq, and } from "drizzle-orm";
-import { getSessionFromCookies } from "../../../../../lib/auth";
+import { getAdminSession } from "../../../../../lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
-// GET — load all working hours for all active technicians
-export async function GET(req: NextRequest) {
-  const session = await getSessionFromCookies();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export async function GET(_req: NextRequest) {
+  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const [membership] = await db
-    .select()
-    .from(dk_account_users)
-    .where(
-      and(
-        eq(dk_account_users.user_id, session.userId),
-        eq(dk_account_users.role, "owner"),
-        eq(dk_account_users.status, "active")
-      )
-    )
-    .limit(1);
-
-  if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const technicians = await db
-    .select()
-    .from(dk_technicians)
-    .where(eq(dk_technicians.active, true));
-
-  const hours = await db
-    .select()
-    .from(dk_working_hours);
-
+  const technicians = await db.select().from(dk_technicians).where(eq(dk_technicians.active, true));
+  const hours = await db.select().from(dk_working_hours);
   return NextResponse.json({ technicians, hours });
 }
 
-// PUT — replace all working hours for a technician (full week in one shot)
 export async function PUT(req: NextRequest) {
-  const session = await getSessionFromCookies();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const [membership] = await db
-    .select()
-    .from(dk_account_users)
-    .where(
-      and(
-        eq(dk_account_users.user_id, session.userId),
-        eq(dk_account_users.role, "owner"),
-        eq(dk_account_users.status, "active")
-      )
-    )
-    .limit(1);
-
-  if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  type DayRow = {
-    weekday: number;
-    is_open: boolean;
-    opens_at: string | null;
-    closes_at: string | null;
-  };
-
+  type DayRow = { weekday: number; is_open: boolean; opens_at: string | null; closes_at: string | null };
   const { technicianId, days }: { technicianId: string; days: DayRow[] } = await req.json();
 
   if (!technicianId || !Array.isArray(days) || days.length !== 7) {
@@ -77,11 +32,9 @@ export async function PUT(req: NextRequest) {
 
   if (!tech) return NextResponse.json({ error: "Technician not found" }, { status: 404 });
 
-  // Delete existing rows for this technician and re-insert
   await db.delete(dk_working_hours).where(eq(dk_working_hours.technician_id, technicianId));
 
   const today = new Date().toISOString().slice(0, 10);
-
   await db.insert(dk_working_hours).values(
     days.map((d) => ({
       technician_id: technicianId,

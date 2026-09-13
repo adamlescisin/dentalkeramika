@@ -233,11 +233,7 @@ export default async function DashboardPage() {
             { href: "/rezervace", label: "Nová rezervace" },
             { href: "/portal/rezervace", label: "Všechny termíny" },
             { href: "/portal/profil", label: "Profil ordinace" },
-            ...(membership.role === "owner" ? [
-              { href: "/portal/admin/rezervace", label: "Čekající ke schválení" },
-            ] : [
-              { href: "/portal/profil#tym", label: "Správa týmu" },
-            ]),
+            { href: "/portal/profil#tym", label: "Správa týmu" },
           ].map((a) => (
             <Link
               key={a.href}

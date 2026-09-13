@@ -1,37 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../../../../../db";
-import {
-  dk_reservations,
-  dk_services,
-  dk_locations,
-  dk_accounts,
-  dk_account_users,
-} from "../../../../../../../db/schema";
-import { eq, and, asc } from "drizzle-orm";
-import { getSessionFromCookies } from "../../../../../../lib/auth";
+import { dk_reservations, dk_services, dk_locations, dk_accounts } from "../../../../../../../db/schema";
+import { eq, asc } from "drizzle-orm";
+import { getAdminSession } from "../../../../../../lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
-// GET /api/dk/v1/reservations/pending
-// Owner-only: returns all pending (requires_approval) reservations across the system.
 export async function GET(_req: NextRequest) {
-  const session = await getSessionFromCookies();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const [membership] = await db
-    .select()
-    .from(dk_account_users)
-    .where(
-      and(
-        eq(dk_account_users.user_id, session.userId),
-        eq(dk_account_users.status, "active")
-      )
-    )
-    .limit(1);
-
-  if (!membership || membership.role !== "owner") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const rows = await db
     .select({
