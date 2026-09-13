@@ -138,7 +138,7 @@ export default async function ReservaceDetailPage({
               Přeložit termín
             </Link>
             <a
-              href={`/api/dk/v1/reservations/${r.id}.ics`}
+              href={`/api/dk/v1/reservations/${r.id}/ics`}
               className="text-sm font-medium px-4 py-2.5 rounded-lg border"
               style={{ borderColor: "var(--line)", color: "var(--ink)" }}
             >

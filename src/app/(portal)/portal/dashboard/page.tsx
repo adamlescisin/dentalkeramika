@@ -157,7 +157,7 @@ export default async function DashboardPage() {
                   Přeložit termín
                 </Link>
                 <a
-                  href={`/api/dk/v1/reservations/${nextVisit.reservation.id}.ics`}
+                  href={`/api/dk/v1/reservations/${nextVisit.reservation.id}/ics`}
                   className="text-sm font-medium px-4 py-2 rounded-lg border"
                   style={{ borderColor: "var(--line)", color: "var(--ink)" }}
                 >
@@ -233,7 +233,11 @@ export default async function DashboardPage() {
             { href: "/rezervace", label: "Nová rezervace" },
             { href: "/portal/rezervace", label: "Všechny termíny" },
             { href: "/portal/profil", label: "Profil ordinace" },
-            { href: "/portal/profil#tym", label: "Správa týmu" },
+            ...(membership.role === "owner" ? [
+              { href: "/portal/admin/rezervace", label: "Čekající ke schválení" },
+            ] : [
+              { href: "/portal/profil#tym", label: "Správa týmu" },
+            ]),
           ].map((a) => (
             <Link
               key={a.href}

@@ -7,7 +7,7 @@ import {
   dk_locations,
   dk_sessions,
 } from "../../../../../../../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import {
   hashPassword,
   verifyPassword,
@@ -57,6 +57,16 @@ export async function GET(
         new URL("/prihlasit?error=link_expired", req.url)
       );
     }
+    // Activate any pending team invites for this user
+    await db
+      .update(dk_account_users)
+      .set({ status: "active", accepted_at: new Date() })
+      .where(
+        and(
+          eq(dk_account_users.user_id, result.userId),
+          eq(dk_account_users.status, "invited")
+        )
+      );
     const next = searchParams.get("next") ?? "/portal/dashboard";
     const jwt = await createSession(result.userId);
     const redirectRes = NextResponse.redirect(new URL(next, req.url));
