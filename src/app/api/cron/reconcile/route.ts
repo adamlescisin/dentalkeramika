@@ -52,7 +52,8 @@ export async function GET(req: NextRequest) {
 
     const { events, nextSyncToken, gone } = await listEventsSince(
       tech.google_calendar_id,
-      channel?.sync_token ?? null
+      channel?.sync_token ?? null,
+      tech.id
     );
 
     if (gone || !channel) {
@@ -104,6 +105,7 @@ export async function GET(req: NextRequest) {
         const secondRead = await listEventsSince(
           tech.google_calendar_id!,
           null,
+          tech.id,
           new Date(event.start?.dateTime ?? Date.now()),
           new Date(event.end?.dateTime ?? Date.now())
         );
@@ -184,12 +186,13 @@ export async function GET(req: NextRequest) {
         const { resourceId, expiration } = await registerWatchChannel(
           tech.google_calendar_id,
           channelId,
-          `${process.env.NEXT_PUBLIC_APP_URL}/api/dk/v1/google-webhook`
+          `${process.env.NEXT_PUBLIC_APP_URL}/api/dk/v1/google-webhook`,
+          tech.id
         );
 
         if (channel && expiringSoon) {
           // Stop the old channel
-          stopWatchChannel(channel.channel_id, channel.resource_id ?? "").catch(
+          stopWatchChannel(channel.channel_id, channel.resource_id ?? "", tech.id).catch(
             console.error
           );
 

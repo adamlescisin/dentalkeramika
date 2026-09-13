@@ -255,6 +255,18 @@ CREATE TABLE dk_reservation_events (
 );
 CREATE INDEX dk_res_events_res_idx ON dk_reservation_events(reservation_id);
 
+-- Google OAuth tokens per technician (access + refresh, encrypted at rest)
+CREATE TABLE dk_oauth_tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  technician_id UUID NOT NULL REFERENCES dk_technicians(id) ON DELETE CASCADE,
+  access_token_enc TEXT NOT NULL,
+  refresh_token_enc TEXT NOT NULL,
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(technician_id)
+);
+
 -- Google Calendar watch channels
 CREATE TABLE dk_google_watch_channels (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -281,6 +293,6 @@ FROM (VALUES
   ('a', 'Sken — Praha',                  'sken-praha',    'scan',       'praha', 60, 60, 30,  true, false),
   ('b', 'Sken — do 30 km od Prahy',      'sken-do-30km',  'scan',       'do30',  60, 60, 60,  true, false),
   ('c', 'Sken — do 100 km od Prahy',     'sken-do-100km', 'scan',       'do100', 60, 90, 90,  true, false),
-  ('d', 'Celodenní pronájem s technikem','celodenni',     'day_rental', NULL,   480,  0,  0,  true, true)
+  ('d', 'Celodenní pronájem s technikem','celodenni',     'day_rental', NULL,   480,  0,  0,  true, false)
 ) AS s(code, name, slug, kind, zone_code, dur, bb, ba, online, approval)
 LEFT JOIN dk_zones z ON z.code = s.zone_code;

@@ -180,7 +180,7 @@ export async function PATCH(
   });
 
   // Patch Google Calendar event (keep same event id per spec)
-  if (reservation.google_event_id && reservation.google_calendar_id) {
+  if (reservation.google_event_id && reservation.google_calendar_id && reservation.technician_id) {
     patchCalendarEvent(
       reservation.google_calendar_id,
       reservation.google_event_id,
@@ -188,7 +188,8 @@ export async function PATCH(
         startIso: newStart.toISOString(),
         endIso: newEnd.toISOString(),
         etag: reservation.google_etag ?? undefined,
-      }
+      },
+      reservation.technician_id
     )
       .then(({ etag }) =>
         db
@@ -276,10 +277,11 @@ export async function DELETE(
   });
 
   // Delete Google Calendar event (with 10-minute grace on the inbound webhook)
-  if (reservation.google_event_id && reservation.google_calendar_id) {
+  if (reservation.google_event_id && reservation.google_calendar_id && reservation.technician_id) {
     deleteCalendarEvent(
       reservation.google_calendar_id,
-      reservation.google_event_id
+      reservation.google_event_id,
+      reservation.technician_id
     ).catch(console.error);
   }
 

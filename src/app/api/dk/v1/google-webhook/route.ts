@@ -50,7 +50,8 @@ export async function POST(req: NextRequest) {
   try {
     const { nextSyncToken } = await listEventsSince(
       technician.google_calendar_id,
-      channel.sync_token
+      channel.sync_token,
+      technician.id
     );
 
     if (nextSyncToken) {

@@ -390,6 +390,24 @@ export const dk_reservation_events = pgTable(
   (t) => [index("dk_res_events_res_idx").on(t.reservation_id)]
 );
 
+// ─── Google OAuth tokens (per technician, encrypted at rest) ─────────────────
+
+export const dk_oauth_tokens = pgTable("dk_oauth_tokens", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  technician_id: uuid("technician_id")
+    .notNull()
+    .references(() => dk_technicians.id, { onDelete: "cascade" }),
+  access_token_enc: text("access_token_enc").notNull(),
+  refresh_token_enc: text("refresh_token_enc").notNull(),
+  expires_at: timestamp("expires_at", { withTimezone: true }),
+  created_at: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+  updated_at: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+}, (t) => [uniqueIndex("dk_oauth_tokens_tech_idx").on(t.technician_id)]);
+
 // ─── Google Watch channels ────────────────────────────────────────────────────
 
 export const dk_google_watch_channels = pgTable("dk_google_watch_channels", {

@@ -271,6 +271,7 @@ export async function POST(req: NextRequest) {
     syncToGoogleCalendar({
       reservationId,
       calendarId: technician.google_calendar_id,
+      technicianId: technician.id,
       serviceName: service.name,
       location,
       start,
@@ -289,6 +290,7 @@ export async function POST(req: NextRequest) {
 async function syncToGoogleCalendar(params: {
   reservationId: string;
   calendarId: string;
+  technicianId: string;
   serviceName: string;
   location: { label: string; street: string; city: string; zip: string; access_note: string | null; contact_name: string | null; contact_phone: string | null };
   start: Date;
@@ -300,6 +302,7 @@ async function syncToGoogleCalendar(params: {
   const {
     reservationId,
     calendarId,
+    technicianId,
     serviceName,
     location,
     start,
@@ -325,7 +328,7 @@ async function syncToGoogleCalendar(params: {
       description: descLines.join("\n"),
       startIso: start.toISOString(),
       endIso: end.toISOString(),
-    });
+    }, technicianId);
 
     await db
       .update(dk_reservations)

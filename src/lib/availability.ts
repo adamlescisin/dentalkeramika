@@ -116,9 +116,9 @@ export async function getAvailability(params: {
   let googleBusy: Array<{ start: string; end: string }> = [];
   if (googleCalendarId) {
     try {
-      googleBusy = await queryGoogleFreebusy(googleCalendarId, from, to);
+      googleBusy = await queryGoogleFreebusy(googleCalendarId, from, to, technicianId);
     } catch {
-      // Non-fatal — fall back to DB-only availability
+      // Non-fatal — Google Calendar unavailable, fall back to DB-only availability
     }
   }
 

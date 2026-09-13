@@ -297,6 +297,10 @@ async function handleRegister(req: NextRequest) {
     })
     .returning({ id: dk_users.id, email: dk_users.email });
 
+  // Auto-approve is currently enabled. To switch to manual approval,
+  // set AUTO_APPROVE_ACCOUNTS=false in env and flip the status to "pending".
+  const autoApprove = process.env.AUTO_APPROVE_ACCOUNTS !== "false";
+
   // Create account (practice)
   const [account] = await db
     .insert(dk_accounts)
@@ -304,7 +308,8 @@ async function handleRegister(req: NextRequest) {
       name: practiceName,
       ico: ico ?? null,
       billing_email: billingEmail ?? email.toLowerCase().trim(),
-      status: "pending",
+      status: autoApprove ? "active" : "pending",
+      approved_at: autoApprove ? new Date() : null,
     })
     .returning({ id: dk_accounts.id });
 
