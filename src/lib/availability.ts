@@ -117,9 +117,12 @@ export async function getAvailability(params: {
   if (googleCalendarId) {
     try {
       googleBusy = await queryGoogleFreebusy(googleCalendarId, from, to, technicianId);
-    } catch {
-      // Non-fatal — Google Calendar unavailable, fall back to DB-only availability
+      console.log(`[availability] Google freebusy ok — calendarId=${googleCalendarId} busyBlocks=${googleBusy.length}`);
+    } catch (err) {
+      console.error("[availability] Google freebusy failed — falling back to DB-only:", err instanceof Error ? err.message : err);
     }
+  } else {
+    console.warn(`[availability] No googleCalendarId for technician ${technicianId} — skipping freebusy`);
   }
 
   const results: SlotResult[] = [];
@@ -127,7 +130,7 @@ export async function getAvailability(params: {
 
   while (cur <= to) {
     const dateStr = cur.toISOString().slice(0, 10);
-    const weekday = cur.getDay(); // 0=Sun…6=Sat
+    const weekday = cur.getUTCDay(); // 0=Sun…6=Sat — use UTC to match the UTC-midnight dates we send
 
     // Resolve working hours: exception > most recent working hours row
     const exception = exceptions.find((e) => e.date === dateStr);
@@ -160,7 +163,7 @@ export async function getAvailability(params: {
 
     if (!dayOpen || !opensAt || !closesAt) {
       results.push({ date: dateStr, slots: [], closed: true, reason: "closed" });
-      cur.setDate(cur.getDate() + 1);
+      cur.setUTCDate(cur.getUTCDate() + 1);
       continue;
     }
 
@@ -192,7 +195,7 @@ export async function getAvailability(params: {
     const totalBlockMin = bufferBeforeMin + durationMin + bufferAfterMin;
     if (totalBlockMin > minutesBetween(openDt, closeDt)) {
       results.push({ date: dateStr, slots: [], closed: false, reason: "no_fit" });
-      cur.setDate(cur.getDate() + 1);
+      cur.setUTCDate(cur.getUTCDate() + 1);
       continue;
     }
 
@@ -238,7 +241,7 @@ export async function getAvailability(params: {
       reason: slots.length === 0 ? "fully_booked" : undefined,
     });
 
-    cur.setDate(cur.getDate() + 1);
+    cur.setUTCDate(cur.getUTCDate() + 1);
   }
 
   return results;

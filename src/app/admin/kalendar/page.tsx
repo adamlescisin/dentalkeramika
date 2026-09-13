@@ -9,6 +9,7 @@ type Tech = {
   id: string;
   display_name: string;
   google_calendar_id: string | null;
+  active: boolean;
   connected: boolean;
 };
 
@@ -151,6 +152,7 @@ function KalendarPageInner() {
   const [techs, setTechs] = useState<Tech[]>([]);
   const [loading, setLoading] = useState(true);
   const [activePick, setActivePick] = useState<string | null>(pickId);
+  const [testResults, setTestResults] = useState<Record<string, "testing" | "ok" | string>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -161,6 +163,21 @@ function KalendarPageInner() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  async function testConnection(tech: Tech) {
+    setTestResults((prev) => ({ ...prev, [tech.id]: "testing" }));
+    try {
+      const res = await fetch(`/api/dk/v1/admin/technicians/${tech.id}/calendars`);
+      if (res.ok) {
+        setTestResults((prev) => ({ ...prev, [tech.id]: "ok" }));
+      } else {
+        const b = await res.json().catch(() => ({}));
+        setTestResults((prev) => ({ ...prev, [tech.id]: (b as { error?: string }).error ?? "Chyba" }));
+      }
+    } catch {
+      setTestResults((prev) => ({ ...prev, [tech.id]: "Síťová chyba" }));
+    }
+  }
 
   function handlePickDone() {
     setActivePick(null);
@@ -237,6 +254,21 @@ function KalendarPageInner() {
                   {tech.connected ? (
                     <>
                       <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: "#f0faf5", color: "#1a6b3c" }}>Aktivní</span>
+                      {testResults[tech.id] === "testing" ? (
+                        <span className="text-xs" style={{ color: "#6b7f8a" }}>Testuji…</span>
+                      ) : testResults[tech.id] === "ok" ? (
+                        <span className="text-xs font-medium" style={{ color: "#1a6b3c" }}>✓ Připojení OK</span>
+                      ) : testResults[tech.id] ? (
+                        <span className="text-xs font-medium" style={{ color: "var(--status-cancelled)" }}>✗ {testResults[tech.id]}</span>
+                      ) : (
+                        <button
+                          onClick={() => testConnection(tech)}
+                          className="text-xs font-medium px-3 py-1.5 rounded-lg border"
+                          style={{ borderColor: "var(--line)", color: "#6b7f8a" }}
+                        >
+                          Otestovat
+                        </button>
+                      )}
                       <button
                         onClick={() => setActivePick(tech.id)}
                         className="text-xs font-medium px-3 py-1.5 rounded-lg border"
