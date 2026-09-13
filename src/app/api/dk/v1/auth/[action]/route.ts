@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "../../../../../../db";
+import { db } from "../../../../../../../db";
 import {
   dk_users,
   dk_accounts,
   dk_account_users,
   dk_locations,
-} from "../../../../../../db/schema";
+  dk_sessions,
+} from "../../../../../../../db/schema";
 import { eq } from "drizzle-orm";
 import {
   hashPassword,
@@ -19,21 +20,58 @@ import {
   checkLoginRateLimit,
   isPasswordPwned,
   getSessionFromCookies,
-} from "../../../../../lib/auth";
+} from "../../../../../../lib/auth";
 import {
   sendVerificationEmail,
   sendMagicLink,
   sendPasswordReset,
-} from "../../../../../lib/email";
+} from "../../../../../../lib/email";
 
 export const dynamic = "force-dynamic";
 
-// All auth actions come through POST with action in the URL path or body.
-// Routes: POST /dk/v1/auth/login | magic-link | reset | verify | register
+// GET /api/dk/v1/auth/verify?token=…&type=verify_email
+// Handles email verification links — redirects to login on success.
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ action: string }> }
+) {
+  const { action } = await params;
+  if (action !== "verify") {
+    return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+  }
 
-export async function POST(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-  const action = pathname.split("/").pop();
+  const { searchParams } = req.nextUrl;
+  const token = searchParams.get("token");
+  const type = searchParams.get("type");
+
+  if (!token || type !== "verify_email") {
+    return NextResponse.redirect(
+      new URL("/prihlasit?error=invalid_link", req.url)
+    );
+  }
+
+  const result = await consumeAuthToken(token, "verify_email");
+  if (!result) {
+    return NextResponse.redirect(
+      new URL("/prihlasit?error=link_expired", req.url)
+    );
+  }
+
+  await db
+    .update(dk_users)
+    .set({ email_verified_at: new Date(), updated_at: new Date() })
+    .where(eq(dk_users.id, result.userId));
+
+  return NextResponse.redirect(
+    new URL("/prihlasit?verified=1", req.url)
+  );
+}
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ action: string }> }
+) {
+  const { action } = await params;
 
   switch (action) {
     case "login":
@@ -57,13 +95,12 @@ export async function POST(req: NextRequest) {
 
 async function handleLogin(req: NextRequest) {
   const body = await req.json();
-  const { email, password, staySignedIn } = body;
+  const { email, password } = body;
 
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
 
   const allowed = await checkLoginRateLimit(email, ip);
-  // Return same message for unknown address to avoid enumeration
   const genericError = "Nesprávný e-mail nebo heslo.";
 
   if (!allowed) {
@@ -112,7 +149,6 @@ async function handleMagicLink(req: NextRequest) {
     .where(eq(dk_users.email, email.toLowerCase().trim()))
     .limit(1);
 
-  // Always 200 — no enumeration
   if (!user) {
     return NextResponse.json({ ok: true });
   }
@@ -210,7 +246,6 @@ async function handleReset(req: NextRequest) {
     .where(eq(dk_users.email, email.toLowerCase().trim()))
     .limit(1);
 
-  // Always 200 — no enumeration
   if (!user) {
     return NextResponse.json({ ok: true });
   }
@@ -222,7 +257,7 @@ async function handleReset(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-// ─── Registration (two-step) ──────────────────────────────────────────────────
+// ─── Registration ─────────────────────────────────────────────────────────────
 
 async function handleRegister(req: NextRequest) {
   const body = await req.json();
@@ -242,14 +277,7 @@ async function handleRegister(req: NextRequest) {
     locationAccessNote,
   } = body;
 
-  // Basic validation
-  if (
-    !firstName ||
-    !lastName ||
-    !email ||
-    !password ||
-    !practiceName
-  ) {
+  if (!firstName || !lastName || !email || !password || !practiceName) {
     return NextResponse.json(
       { error: "Vyplňte všechna povinná pole." },
       { status: 400 }
@@ -271,7 +299,6 @@ async function handleRegister(req: NextRequest) {
     );
   }
 
-  // Check email uniqueness
   const [existing] = await db
     .select({ id: dk_users.id })
     .from(dk_users)
@@ -279,13 +306,11 @@ async function handleRegister(req: NextRequest) {
     .limit(1);
 
   if (existing) {
-    // Return generic message to avoid enumeration
     return NextResponse.json({ ok: true });
   }
 
   const hash = await hashPassword(password);
 
-  // Create user
   const [user] = await db
     .insert(dk_users)
     .values({
@@ -297,11 +322,8 @@ async function handleRegister(req: NextRequest) {
     })
     .returning({ id: dk_users.id, email: dk_users.email });
 
-  // Auto-approve is currently enabled. To switch to manual approval,
-  // set AUTO_APPROVE_ACCOUNTS=false in env and flip the status to "pending".
   const autoApprove = process.env.AUTO_APPROVE_ACCOUNTS !== "false";
 
-  // Create account (practice)
   const [account] = await db
     .insert(dk_accounts)
     .values({
@@ -313,7 +335,6 @@ async function handleRegister(req: NextRequest) {
     })
     .returning({ id: dk_accounts.id });
 
-  // Link user as owner
   await db.insert(dk_account_users).values({
     account_id: account.id,
     user_id: user.id,
@@ -322,7 +343,6 @@ async function handleRegister(req: NextRequest) {
     accepted_at: new Date(),
   });
 
-  // Create first location if provided
   if (locationStreet && locationCity && locationZip) {
     await db.insert(dk_locations).values({
       account_id: account.id,
@@ -335,7 +355,6 @@ async function handleRegister(req: NextRequest) {
     });
   }
 
-  // Send verification email
   const verifyToken = await createAuthToken(user.id, "verify_email", 60);
   const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/dk/v1/auth/verify?token=${verifyToken}&type=verify_email`;
   await sendVerificationEmail(user.email, verifyUrl);
@@ -348,11 +367,7 @@ async function handleRegister(req: NextRequest) {
 async function handleLogout(_req: NextRequest) {
   const session = await getSessionFromCookies();
   if (session) {
-    const { db: dbModule } = await import("../../../../../../db");
-    const { dk_sessions } = await import("../../../../../../db/schema");
-    await dbModule
-      .delete(dk_sessions)
-      .where(eq(dk_sessions.id, session.sessionId));
+    await db.delete(dk_sessions).where(eq(dk_sessions.id, session.sessionId));
   }
 
   const res = NextResponse.json({ ok: true });

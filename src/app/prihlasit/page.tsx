@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -9,6 +9,16 @@ type Tab = "password" | "magic" | "reset";
 export default function LoginPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("password");
+  const [banner, setBanner] = useState<string | null>(null);
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("verified") === "1") {
+      setBanner("E-mail ověřen. Nyní se můžete přihlásit.");
+    } else if (p.get("error") === "link_expired") {
+      setBanner("Odkaz vypršel nebo byl již použit. Zaregistrujte se znovu.");
+    }
+  }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +79,12 @@ export default function LoginPage() {
         >
           Přihlásit se
         </h1>
+
+        {banner && (
+          <div className="rounded-xl p-3 border mb-4 text-sm" style={{ background: "#f0faf5", borderColor: "#52c87a", color: "#1a6b3c" }}>
+            {banner}
+          </div>
+        )}
 
         {/* Tab switcher */}
         <div className="flex gap-1 mb-6 p-1 rounded-lg" style={{ background: "var(--porcelain)" }}>
