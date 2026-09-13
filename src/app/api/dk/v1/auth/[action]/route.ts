@@ -44,10 +44,24 @@ export async function GET(
   const token = searchParams.get("token");
   const type = searchParams.get("type");
 
-  if (!token || type !== "verify_email") {
+  if (!token || (type !== "verify_email" && type !== "magic")) {
     return NextResponse.redirect(
       new URL("/prihlasit?error=invalid_link", req.url)
     );
+  }
+
+  if (type === "magic") {
+    const result = await consumeAuthToken(token, "magic_link");
+    if (!result) {
+      return NextResponse.redirect(
+        new URL("/prihlasit?error=link_expired", req.url)
+      );
+    }
+    const next = searchParams.get("next") ?? "/portal/dashboard";
+    const jwt = await createSession(result.userId);
+    const redirectRes = NextResponse.redirect(new URL(next, req.url));
+    redirectRes.headers.set("Set-Cookie", buildSessionCookie(jwt));
+    return redirectRes;
   }
 
   const result = await consumeAuthToken(token, "verify_email");
@@ -154,7 +168,7 @@ async function handleMagicLink(req: NextRequest) {
   }
 
   const token = await createAuthToken(user.id, "magic_link", 15);
-  const url = `${process.env.NEXT_PUBLIC_APP_URL}/prihlasit?token=${token}&type=magic`;
+  const url = `${process.env.NEXT_PUBLIC_APP_URL}/api/dk/v1/auth/verify?token=${token}&type=magic`;
 
   await sendMagicLink(user.email, url);
   return NextResponse.json({ ok: true });
