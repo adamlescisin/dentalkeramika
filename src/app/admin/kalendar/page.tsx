@@ -32,10 +32,12 @@ function AdminNav() {
 function CalendarPickerPanel({
   techId,
   techName,
+  currentCalendarId,
   onDone,
 }: {
   techId: string;
   techName: string;
+  currentCalendarId: string | null;
   onDone: () => void;
 }) {
   const [calendars, setCalendars] = useState<GCalendar[]>([]);
@@ -52,13 +54,18 @@ function CalendarPickerPanel({
       .then((json) => {
         const list: GCalendar[] = json.data ?? [];
         setCalendars(list);
-        const primary = list.find((c) => c.primary);
-        if (primary) setSelected(primary.id);
-        else if (list[0]) setSelected(list[0].id);
+        // Pre-select the already-saved calendar; fall back to primary, then first.
+        if (currentCalendarId && list.some((c) => c.id === currentCalendarId)) {
+          setSelected(currentCalendarId);
+        } else {
+          const primary = list.find((c) => c.primary);
+          if (primary) setSelected(primary.id);
+          else if (list[0]) setSelected(list[0].id);
+        }
       })
       .catch(() => setError("Nepodařilo se načíst seznam kalendářů."))
       .finally(() => setLoading(false));
-  }, [techId]);
+  }, [techId, currentCalendarId]);
 
   async function save() {
     if (!selected) return;
@@ -217,6 +224,7 @@ function KalendarPageInner() {
           <CalendarPickerPanel
             techId={activePick}
             techName={pickTech.display_name}
+            currentCalendarId={pickTech.google_calendar_id}
             onDone={handlePickDone}
           />
         )}

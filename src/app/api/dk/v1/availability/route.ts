@@ -84,12 +84,17 @@ export async function GET(req: NextRequest) {
     }
     googleCalendarId = tech.google_calendar_id ?? undefined;
   } else {
-    // Prefer technicians with a Google Calendar connected; fall back to any active one.
+    // Pick the best-configured active technician:
+    // 1. Must have working hours (otherwise they can never show slots)
+    // 2. Among those, prefer ones with Google Calendar connected
     const [tech] = await db
       .select()
       .from(dk_technicians)
       .where(eq(dk_technicians.active, true))
-      .orderBy(sql`CASE WHEN ${dk_technicians.google_calendar_id} IS NOT NULL THEN 0 ELSE 1 END`)
+      .orderBy(
+        sql`(EXISTS (SELECT 1 FROM dk_working_hours WHERE technician_id = ${dk_technicians.id})) DESC`,
+        sql`CASE WHEN ${dk_technicians.google_calendar_id} IS NOT NULL THEN 0 ELSE 1 END`
+      )
       .limit(1);
     if (!tech) {
       return NextResponse.json(
