@@ -142,7 +142,17 @@ export default function BookingWizard({
         setSlotsError(body.error ?? "Nepodařilo se načíst termíny.");
       } else {
         const json = await res.json();
-        setSlots(json.data ?? []);
+        // API returns SlotResult[]: { date, slots: string[], closed }
+        // Flatten to Slot[]: { start, end }
+        const durationMs = service!.duration_min * 60000;
+        const flat: Slot[] = (json.data ?? []).flatMap(
+          (day: { slots: string[] }) =>
+            day.slots.map((start: string) => ({
+              start,
+              end: new Date(new Date(start).getTime() + durationMs).toISOString(),
+            }))
+        );
+        setSlots(flat);
       }
     } catch {
       setSlotsError("Síťová chyba — zkuste to znovu.");
