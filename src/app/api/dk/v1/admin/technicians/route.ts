@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../../../../../db";
-import { dk_technicians } from "../../../../../../../db/schema";
+import { dk_technicians, dk_oauth_tokens } from "../../../../../../../db/schema";
 import { eq, asc } from "drizzle-orm";
 import { getAdminSession } from "../../../../../../lib/admin-auth";
 
@@ -10,7 +10,12 @@ export async function GET(_req: NextRequest) {
   if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const rows = await db.select().from(dk_technicians).orderBy(asc(dk_technicians.display_name));
-  return NextResponse.json({ data: rows });
+  const tokenRows = await db.select({ technician_id: dk_oauth_tokens.technician_id }).from(dk_oauth_tokens);
+  const connectedIds = new Set(tokenRows.map((r) => r.technician_id));
+
+  return NextResponse.json({
+    data: rows.map((t) => ({ ...t, connected: connectedIds.has(t.id) })),
+  });
 }
 
 export async function POST(req: NextRequest) {

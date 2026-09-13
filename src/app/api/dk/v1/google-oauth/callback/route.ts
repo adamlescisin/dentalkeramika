@@ -44,14 +44,9 @@ export async function GET(req: NextRequest) {
     tokens.expiry_date
   );
 
-  if (!technician.google_calendar_id) {
-    client.setCredentials(tokens);
-    const { google } = await import("googleapis");
-    const cal = google.calendar({ version: "v3", auth: client });
-    const res = await cal.calendarList.get({ calendarId: "primary" });
-    const calId = res.data.id ?? "primary";
-    await db.update(dk_technicians).set({ google_calendar_id: calId }).where(eq(dk_technicians.id, technicianId));
-  }
-
-  return NextResponse.redirect(new URL("/admin/kalendar?connected=1", req.url));
+  // Always send to the calendar picker — even for reconnects — so the admin
+  // can confirm (or change) which calendar is used.
+  return NextResponse.redirect(
+    new URL(`/admin/kalendar?pick=${encodeURIComponent(technicianId)}`, req.url)
+  );
 }

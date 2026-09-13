@@ -353,6 +353,21 @@ export async function listEventsSince(
   }
 }
 
+// ─── Calendar list ───────────────────────────────────────────────────────────
+
+export async function listTechnicianCalendars(
+  technicianId: string
+): Promise<{ id: string; summary: string; primary: boolean }[]> {
+  const auth = await getAuthClientForTechnician(technicianId);
+  const cal = getCalendar(auth);
+  const res = await cal.calendarList.list({ minAccessRole: "writer" });
+  return (res.data.items ?? []).map((c) => ({
+    id: c.id!,
+    summary: c.summary ?? c.id!,
+    primary: !!c.primary,
+  }));
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function buildEventBody(payload: DkEventPayload): calendar_v3.Schema$Event {
