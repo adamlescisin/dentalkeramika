@@ -357,7 +357,14 @@ async function handleRegister(req: NextRequest) {
 
   const verifyToken = await createAuthToken(user.id, "verify_email", 60);
   const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/dk/v1/auth/verify?token=${verifyToken}&type=verify_email`;
-  await sendVerificationEmail(user.email, verifyUrl);
+
+  try {
+    await sendVerificationEmail(user.email, verifyUrl);
+  } catch (err) {
+    // Account created successfully — email is best-effort.
+    // Log so the admin can resend manually; don't fail the request.
+    console.error("Verification email failed:", err);
+  }
 
   return NextResponse.json({ ok: true });
 }

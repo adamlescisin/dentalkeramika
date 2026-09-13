@@ -79,9 +79,9 @@ export default function RegisterPage() {
         }),
       });
 
-      const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Registrace se nezdařila.");
+        const data = await res.json().catch(() => ({}));
+        setError((data as { error?: string }).error ?? "Registrace se nezdařila.");
       } else {
         setSubmitted(true);
       }

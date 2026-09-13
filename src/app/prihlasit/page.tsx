@@ -38,9 +38,9 @@ export default function LoginPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
         });
-        const data = await res.json();
+        const data = res.ok ? await res.json().catch(() => ({})) : await res.json().catch(() => ({}));
         if (!res.ok) {
-          setError(data.error ?? "Přihlášení se nezdařilo.");
+          setError((data as { error?: string }).error ?? "Přihlášení se nezdařilo.");
         } else {
           router.replace("/portal/dashboard");
         }
