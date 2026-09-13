@@ -14,6 +14,10 @@ interface EmailPayload {
 }
 
 async function send(payload: EmailPayload): Promise<void> {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY is not set");
+  }
+
   const res = await fetch(RESEND_API, {
     method: "POST",
     headers: {

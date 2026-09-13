@@ -361,9 +361,8 @@ async function handleRegister(req: NextRequest) {
   try {
     await sendVerificationEmail(user.email, verifyUrl);
   } catch (err) {
-    // Account created successfully — email is best-effort.
-    // Log so the admin can resend manually; don't fail the request.
-    console.error("Verification email failed:", err);
+    // Account created successfully — email is best-effort; log for debugging.
+    console.error("[register] Verification email failed for", user.email, err instanceof Error ? err.message : err);
   }
 
   return NextResponse.json({ ok: true });
