@@ -28,9 +28,9 @@ BEGIN
     (tech_id, 0, false, null,    null,    CURRENT_DATE)
   ON CONFLICT DO NOTHING;
 
-  -- Booking rules (lead time + soft hold)
-  INSERT INTO dk_booking_rules (lead_time_hours, slot_hold_minutes, buffers_inside_working_hours)
-  VALUES (24, 10, true)
-  ON CONFLICT DO NOTHING;
+  -- Booking rules (lead time, slot step, buffers)
+  INSERT INTO dk_booking_rules (id, lead_time_hours, slot_step_min, buffers_inside_working_hours)
+  VALUES (1, 24, 30, true)
+  ON CONFLICT (id) DO NOTHING;
 
 END $$;
