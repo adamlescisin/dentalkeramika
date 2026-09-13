@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 
 export async function getAdminSession() {
   const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase().trim();
+  console.log("[admin-auth] ADMIN_EMAIL:", adminEmail); 
   if (!adminEmail) return null;
 
   const session = await getSessionFromCookies();
