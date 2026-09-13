@@ -128,6 +128,7 @@ async function handleLogin(req: NextRequest) {
   const genericError = "Nesprávný e-mail nebo heslo.";
 
   if (!allowed) {
+    console.log("[login] rate limited:", email);
     return NextResponse.json({ error: genericError }, { status: 429 });
   }
 
@@ -137,11 +138,14 @@ async function handleLogin(req: NextRequest) {
     .where(eq(dk_users.email, email.toLowerCase().trim()))
     .limit(1);
 
+  console.log("[login] user found:", !!user, "has_hash:", !!user?.password_hash, "hash_prefix:", user?.password_hash?.slice(0, 7));
+
   if (!user || !user.password_hash) {
     return NextResponse.json({ error: genericError }, { status: 401 });
   }
 
   const valid = await verifyPassword(password, user.password_hash);
+  console.log("[login] password valid:", valid);
   if (!valid) {
     return NextResponse.json({ error: genericError }, { status: 401 });
   }
