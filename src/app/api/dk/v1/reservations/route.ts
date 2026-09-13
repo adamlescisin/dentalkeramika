@@ -10,8 +10,9 @@ import {
   dk_reservation_events,
   dk_slot_holds,
   dk_booking_rules,
+  dk_users,
 } from "../../../../../../db/schema";
-import { eq, and, or, desc, asc, gt, lt, notInArray } from "drizzle-orm";
+import { eq, and, or, desc, asc, gt, lt, sql } from "drizzle-orm";
 import { getSessionFromCookies } from "../../../../../lib/auth";
 import { createCalendarEvent } from "../../../../../lib/google-calendar";
 import {
@@ -128,6 +129,7 @@ export async function POST(req: NextRequest) {
     .select({
       account_id: dk_account_users.account_id,
       account_status: dk_accounts.status,
+      account_name: dk_accounts.name,
     })
     .from(dk_account_users)
     .innerJoin(dk_accounts, eq(dk_accounts.id, dk_account_users.account_id))
@@ -191,11 +193,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Find an available technician
+  // Find the best-configured active technician: prefer ones with working hours,
+  // then ones with Google Calendar connected (mirrors the availability route logic).
   const [technician] = await db
     .select()
     .from(dk_technicians)
     .where(eq(dk_technicians.active, true))
+    .orderBy(
+      sql`(EXISTS (SELECT 1 FROM dk_working_hours WHERE technician_id = ${dk_technicians.id})) DESC`,
+      sql`CASE WHEN ${dk_technicians.google_calendar_id} IS NOT NULL THEN 0 ELSE 1 END`
+    )
     .limit(1);
 
   if (!technician) {
@@ -266,6 +273,19 @@ export async function POST(req: NextRequest) {
       .where(eq(dk_slot_holds.session_token, body.holdToken));
   }
 
+  // Send confirmation email for confirmed reservations (non-blocking)
+  if (status === "confirmed") {
+    sendConfirmationEmail({
+      userId: session.userId,
+      accountName: membership.account_name ?? "",
+      serviceName: service.name,
+      startsAt: start,
+      locationLabel: location.label,
+      locationAddress: `${location.street}, ${location.zip} ${location.city}`,
+      technicianName: technician.display_name,
+    }).catch(console.error);
+  }
+
   // Sync to Google Calendar (async, non-blocking on failure — queued for retry)
   if (technician.google_calendar_id) {
     syncToGoogleCalendar({
@@ -283,6 +303,36 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ id: reservationId, status }, { status: 201 });
+}
+
+// ─── Background email helper ──────────────────────────────────────────────────
+
+async function sendConfirmationEmail(params: {
+  userId: string;
+  accountName: string;
+  serviceName: string;
+  startsAt: Date;
+  locationLabel: string;
+  locationAddress: string;
+  technicianName: string;
+}) {
+  const [user] = await db
+    .select({ email: dk_users.email })
+    .from(dk_users)
+    .where(eq(dk_users.id, params.userId))
+    .limit(1);
+
+  if (!user) return;
+
+  await sendReservationConfirmation({
+    email: user.email,
+    accountName: params.accountName,
+    serviceName: params.serviceName,
+    startsAt: params.startsAt,
+    locationLabel: params.locationLabel,
+    locationAddress: params.locationAddress,
+    technicianName: params.technicianName,
+  });
 }
 
 // ─── Background Google sync helper ───────────────────────────────────────────
