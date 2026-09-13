@@ -199,13 +199,15 @@ export async function checkLoginRateLimit(email: string, ip: string) {
 
 // ─── Cookie helpers ───────────────────────────────────────────────────────────
 
+const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+
 export function buildSessionCookie(jwt: string): string {
   const maxAge = SESSION_DAYS * 24 * 60 * 60;
-  return `${SESSION_COOKIE}=${jwt}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
+  return `${SESSION_COOKIE}=${jwt}; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=${maxAge}`;
 }
 
 export function clearSessionCookie(): string {
-  return `${SESSION_COOKIE}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`;
+  return `${SESSION_COOKIE}=; HttpOnly${secure}; SameSite=Lax; Path=/; Max-Age=0`;
 }
 
 // ─── HIBP password check ──────────────────────────────────────────────────────
