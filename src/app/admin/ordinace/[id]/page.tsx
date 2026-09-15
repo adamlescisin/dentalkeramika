@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
+import { AdminShell } from "../../_components/AdminShell";
 
 type Account = {
   id: string; name: string; status: string;
@@ -53,20 +53,6 @@ const ACCOUNT_STATUS_COLORS: Record<string, { bg: string; color: string }> = {
   suspended: { bg: "#fff5f5", color: "#7a1a1a" },
 };
 
-function AdminNav({ accountName }: { accountName?: string }) {
-  return (
-    <nav className="flex items-center justify-between px-6 py-4 border-b bg-white" style={{ borderColor: "var(--line)" }}>
-      <Link href="/admin" className="font-bold text-lg" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>DK Admin</Link>
-      <div className="flex items-center gap-4 text-sm">
-        <Link href="/admin/ordinace" style={{ color: "var(--cyan-deep)" }}>← {accountName ? "Ordinace" : "Zpět"}</Link>
-        <form action="/api/dk/v1/auth/logout" method="POST">
-          <button type="submit" className="text-sm" style={{ color: "var(--status-cancelled)" }}>Odhlásit</button>
-        </form>
-      </div>
-    </nav>
-  );
-}
-
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleString("cs-CZ", {
     day: "numeric", month: "numeric", year: "numeric",
@@ -115,8 +101,7 @@ export default function OrdinaceDetailPage() {
   const statuses = Array.from(new Set(reservations.map((r) => r.status)));
 
   return (
-    <main style={{ background: "var(--porcelain)", minHeight: "100vh" }}>
-      <AdminNav accountName={account?.name} />
+    <AdminShell>
       <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-6">
 
         {/* Practice header */}
@@ -215,6 +200,6 @@ export default function OrdinaceDetailPage() {
         </div>
 
       </div>
-    </main>
+    </AdminShell>
   );
 }

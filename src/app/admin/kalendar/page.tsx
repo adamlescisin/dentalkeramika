@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { AdminShell } from "../_components/AdminShell";
 
 type Tech = {
   id: string;
@@ -14,20 +15,6 @@ type Tech = {
 };
 
 type GCalendar = { id: string; summary: string; primary: boolean };
-
-function AdminNav() {
-  return (
-    <nav className="flex items-center justify-between px-6 py-4 border-b bg-white" style={{ borderColor: "var(--line)" }}>
-      <Link href="/admin" className="font-bold text-lg" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>DK Admin</Link>
-      <div className="flex items-center gap-4 text-sm">
-        <Link href="/admin" style={{ color: "var(--cyan-deep)" }}>← Zpět</Link>
-        <form action="/api/dk/v1/auth/logout" method="POST">
-          <button type="submit" className="text-sm" style={{ color: "var(--status-cancelled)" }}>Odhlásit</button>
-        </form>
-      </div>
-    </nav>
-  );
-}
 
 function CalendarPickerPanel({
   techId,
@@ -195,8 +182,7 @@ function KalendarPageInner() {
   const pickTech = techs.find((t) => t.id === activePick);
 
   return (
-    <main style={{ background: "var(--porcelain)", minHeight: "100vh" }}>
-      <AdminNav />
+    <AdminShell>
       <div className="max-w-2xl mx-auto px-6 py-10 flex flex-col gap-6">
         <div>
           <h1 className="text-2xl font-bold mb-1" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>Google Kalendář</h1>
@@ -305,7 +291,7 @@ function KalendarPageInner() {
           </div>
         )}
       </div>
-    </main>
+    </AdminShell>
   );
 }
 

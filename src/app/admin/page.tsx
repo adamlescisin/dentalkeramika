@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAdminSession } from "../../lib/admin-auth";
+import { AdminShell } from "./_components/AdminShell";
 
 export const dynamic = "force-dynamic";
 
@@ -19,21 +20,13 @@ export default async function AdminPage() {
   if (!session) redirect("/admin/prihlasit");
 
   return (
-    <main style={{ background: "var(--porcelain)", minHeight: "100vh" }}>
-      <nav className="flex items-center justify-between px-6 py-4 border-b bg-white" style={{ borderColor: "var(--line)" }}>
-        <Link href="/admin" className="font-bold text-lg" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
-          DK Admin
-        </Link>
-        <form action="/api/dk/v1/auth/logout" method="POST">
-          <button type="submit" className="text-sm" style={{ color: "var(--status-cancelled)" }}>Odhlásit</button>
-        </form>
-      </nav>
-
-      <div className="max-w-3xl mx-auto px-6 py-10">
-        <h1 className="text-2xl font-bold mb-6" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
-          Administrace
+    <AdminShell>
+      <div className="px-8 py-10">
+        <h1 className="text-2xl font-bold mb-2" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
+          Přehled
         </h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <p className="text-sm mb-8" style={{ color: "#6b7f8a" }}>Vyberte sekci pro správu systému.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
           {SECTIONS.map((s) => (
             <Link
               key={s.href}
@@ -47,6 +40,6 @@ export default async function AdminPage() {
           ))}
         </div>
       </div>
-    </main>
+    </AdminShell>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { AdminShell } from "../_components/AdminShell";
 
 type Rules = {
   slot_step_min: number;
@@ -11,20 +11,6 @@ type Rules = {
   horizon_days: number;
   buffers_inside_working_hours: boolean;
 };
-
-function AdminNav() {
-  return (
-    <nav className="flex items-center justify-between px-6 py-4 border-b bg-white" style={{ borderColor: "var(--line)" }}>
-      <Link href="/admin" className="font-bold text-lg" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>DK Admin</Link>
-      <div className="flex items-center gap-4 text-sm">
-        <Link href="/admin" style={{ color: "var(--cyan-deep)" }}>← Zpět</Link>
-        <form action="/api/dk/v1/auth/logout" method="POST">
-          <button type="submit" className="text-sm" style={{ color: "var(--status-cancelled)" }}>Odhlásit</button>
-        </form>
-      </div>
-    </nav>
-  );
-}
 
 const FIELDS: { key: keyof Rules; label: string; desc: string; type: "number" | "boolean"; unit?: string }[] = [
   { key: "slot_step_min",                label: "Krok slotu",             desc: "Rozestup mezi nabízenými sloty.",              type: "number",  unit: "min" },
@@ -75,9 +61,8 @@ export default function AdminNastaveni() {
   const isDirty = rules && draft && JSON.stringify(rules) !== JSON.stringify(draft);
 
   return (
-    <main style={{ background: "var(--porcelain)", minHeight: "100vh" }}>
-      <AdminNav />
-      <div className="max-w-xl mx-auto px-4 py-10 flex flex-col gap-6">
+    <AdminShell>
+      <div className="max-w-xl mx-auto px-6 py-10 flex flex-col gap-6">
         <div>
           <h1 className="text-2xl font-bold mb-1" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>Nastavení</h1>
           <p className="text-sm" style={{ color: "#6b7f8a" }}>Globální pravidla rezervačního systému.</p>
@@ -126,6 +111,6 @@ export default function AdminNastaveni() {
           </>
         )}
       </div>
-    </main>
+    </AdminShell>
   );
 }

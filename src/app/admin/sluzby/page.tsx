@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { AdminShell } from "../_components/AdminShell";
 
 type Service = {
   id: string; code: string; name: string; slug: string; kind: string;
@@ -10,20 +10,6 @@ type Service = {
 };
 
 type EditState = Partial<Pick<Service, "name" | "slug" | "duration_min" | "buffer_before_min" | "buffer_after_min" | "bookable_online" | "requires_approval" | "active">>;
-
-function AdminNav() {
-  return (
-    <nav className="flex items-center justify-between px-6 py-4 border-b bg-white" style={{ borderColor: "var(--line)" }}>
-      <Link href="/admin" className="font-bold text-lg" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>DK Admin</Link>
-      <div className="flex items-center gap-4 text-sm">
-        <Link href="/admin" style={{ color: "var(--cyan-deep)" }}>← Zpět</Link>
-        <form action="/api/dk/v1/auth/logout" method="POST">
-          <button type="submit" className="text-sm" style={{ color: "var(--status-cancelled)" }}>Odhlásit</button>
-        </form>
-      </div>
-    </nav>
-  );
-}
 
 export default function AdminSluzby() {
   const [services, setServices] = useState<Service[]>([]);
@@ -91,8 +77,7 @@ export default function AdminSluzby() {
   }
 
   return (
-    <main style={{ background: "var(--porcelain)", minHeight: "100vh" }}>
-      <AdminNav />
+    <AdminShell>
       <div className="max-w-3xl mx-auto px-6 py-10 flex flex-col gap-6">
         <h1 className="text-2xl font-bold" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>Služby</h1>
 
@@ -196,6 +181,6 @@ export default function AdminSluzby() {
           </div>
         )}
       </div>
-    </main>
+    </AdminShell>
   );
 }

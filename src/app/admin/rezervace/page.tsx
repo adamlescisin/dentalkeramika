@@ -1,27 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { AdminShell } from "../_components/AdminShell";
 
 type Reservation = {
   id: string; starts_at: string; ends_at: string;
   requester_name: string; note: string | null; created_at: string;
   service_name: string; location_label: string; location_city: string; account_name: string;
 };
-
-function AdminNav() {
-  return (
-    <nav className="flex items-center justify-between px-6 py-4 border-b bg-white" style={{ borderColor: "var(--line)" }}>
-      <Link href="/admin" className="font-bold text-lg" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>DK Admin</Link>
-      <div className="flex items-center gap-4 text-sm">
-        <Link href="/admin" style={{ color: "var(--cyan-deep)" }}>← Zpět</Link>
-        <form action="/api/dk/v1/auth/logout" method="POST">
-          <button type="submit" className="text-sm" style={{ color: "var(--status-cancelled)" }}>Odhlásit</button>
-        </form>
-      </div>
-    </nav>
-  );
-}
 
 export default function AdminRezervace() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -64,8 +50,7 @@ export default function AdminRezervace() {
   }
 
   return (
-    <main style={{ background: "var(--porcelain)", minHeight: "100vh" }}>
-      <AdminNav />
+    <AdminShell>
       <div className="max-w-3xl mx-auto px-6 py-10 flex flex-col gap-6">
         <div>
           <h1 className="text-2xl font-bold mb-1" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>Čekající rezervace</h1>
@@ -129,6 +114,6 @@ export default function AdminRezervace() {
           </div>
         )}
       </div>
-    </main>
+    </AdminShell>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { AdminShell } from "../_components/AdminShell";
 
 const DAYS = ["Ne", "Po", "Út", "St", "Čt", "Pá", "So"];
 const WEEKDAYS = [1, 2, 3, 4, 5];
@@ -75,18 +76,8 @@ export default function WorkingHoursEditor() {
   }
 
   return (
-    <main style={{ background: "var(--porcelain)", minHeight: "100vh" }}>
-      <nav className="flex items-center justify-between px-6 py-4 border-b bg-white" style={{ borderColor: "var(--line)" }}>
-        <Link href="/admin" className="font-bold text-lg" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>DK Admin</Link>
-        <div className="flex items-center gap-4 text-sm">
-          <Link href="/admin" style={{ color: "var(--cyan-deep)" }}>← Zpět</Link>
-          <form action="/api/dk/v1/auth/logout" method="POST">
-            <button type="submit" className="text-sm" style={{ color: "var(--status-cancelled)" }}>Odhlásit</button>
-          </form>
-        </div>
-      </nav>
-
-      <div className="max-w-xl mx-auto px-4 py-10 flex flex-col gap-6">
+    <AdminShell>
+      <div className="max-w-xl mx-auto px-6 py-10 flex flex-col gap-6">
         <div>
           <h1 className="text-2xl font-bold mb-1" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>Pracovní doba</h1>
           <p className="text-sm" style={{ color: "#6b7f8a" }}>Dostupné hodiny každého technika.</p>
@@ -145,6 +136,6 @@ export default function WorkingHoursEditor() {
           </>
         )}
       </div>
-    </main>
+    </AdminShell>
   );
 }
