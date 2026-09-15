@@ -77,20 +77,7 @@ export default async function ReservaceListPage({
   const list = scope === "past" ? past : upcoming;
 
   return (
-    <main style={{ background: "var(--porcelain)", minHeight: "100vh" }}>
-      <nav className="flex items-center justify-between px-6 py-4 border-b bg-white" style={{ borderColor: "var(--line)" }}>
-        <Link href="/" className="font-bold text-lg" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
-          DentálníKeramika
-        </Link>
-        <div className="flex items-center gap-4 text-sm">
-          <Link href="/portal/dashboard" style={{ color: "var(--cyan-deep)" }}>Dashboard</Link>
-          <form action="/api/dk/v1/auth/logout" method="POST">
-            <button type="submit" className="text-sm" style={{ color: "var(--status-cancelled)" }}>Odhlásit</button>
-          </form>
-        </div>
-      </nav>
-
-      <div className="max-w-4xl mx-auto px-6 py-8 flex flex-col gap-6">
+    <div className="max-w-4xl mx-auto px-6 py-8 flex flex-col gap-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-2xl font-bold" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
             Termíny
@@ -187,7 +174,6 @@ export default async function ReservaceListPage({
             })}
           </div>
         )}
-      </div>
-    </main>
+    </div>
   );
 }

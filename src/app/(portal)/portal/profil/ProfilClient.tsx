@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 
 type Account = {
   id: string;
@@ -559,29 +558,14 @@ export default function ProfilClient({
   const isOwner = role === "owner";
 
   return (
-    <main style={{ background: "var(--porcelain)", minHeight: "100vh" }}>
-      <nav className="flex items-center justify-between px-6 py-4 border-b bg-white" style={{ borderColor: "var(--line)" }}>
-        <Link href="/" className="font-bold text-lg" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
-          DentálníKeramika
-        </Link>
-        <div className="flex items-center gap-4 text-sm">
-          <Link href="/portal/dashboard" style={{ color: "var(--cyan-deep)" }}>Dashboard</Link>
-          <form action="/api/dk/v1/auth/logout" method="POST">
-            <button type="submit" className="text-sm" style={{ color: "var(--status-cancelled)" }}>Odhlásit</button>
-          </form>
-        </div>
-      </nav>
+    <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-10">
+      <h1 className="text-2xl font-bold" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
+        Profil ordinace
+      </h1>
 
-      <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-10">
-        <h1 className="text-2xl font-bold" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
-          Profil ordinace
-        </h1>
-
-        <BillingSection account={account} isOwner={isOwner} />
-        <LocationsSection initialLocations={locations} isOwner={isOwner} />
-        <TeamSection initialTeam={team} isOwner={isOwner} />
-
-      </div>
-    </main>
+      <BillingSection account={account} isOwner={isOwner} />
+      <LocationsSection initialLocations={locations} isOwner={isOwner} />
+      <TeamSection initialTeam={team} isOwner={isOwner} />
+    </div>
   );
 }

@@ -100,78 +100,8 @@ export default async function DashboardPage() {
   return (
     <>
       <style>{`
-        .portal-wrap { display: flex; min-height: 100vh; background: var(--porcelain); }
-
-        /* ── Sidebar ── */
-        .portal-sidebar {
-          width: 240px;
-          min-width: 240px;
-          background: #fff;
-          border-right: 1px solid var(--line);
-          display: flex;
-          flex-direction: column;
-          position: sticky;
-          top: 0;
-          height: 100vh;
-          overflow-y: auto;
-        }
-        .sidebar-logo {
-          padding: 24px 20px 20px;
-          font-size: 15px;
-          font-weight: 700;
-          color: var(--ink);
-          letter-spacing: -0.02em;
-          text-decoration: none;
-          border-bottom: 1px solid var(--line);
-          display: block;
-        }
-        .sidebar-section { padding: 12px 0; }
-        .sidebar-sep { height: 1px; background: var(--line); margin: 8px 20px; }
-        .nav-item {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 9px 20px;
-          font-size: 13.5px;
-          color: #6b7f8a;
-          text-decoration: none;
-          border-left: 3px solid transparent;
-          transition: background 0.1s, color 0.1s;
-          font-weight: 400;
-        }
-        .nav-item:hover { background: var(--porcelain); color: var(--ink); }
-        .nav-item.active {
-          border-left-color: var(--cyan);
-          background: var(--porcelain);
-          color: var(--ink);
-          font-weight: 600;
-        }
-        .nav-badge {
-          background: var(--cyan);
-          color: #fff;
-          font-size: 11px;
-          font-weight: 700;
-          padding: 1px 7px;
-          border-radius: 999px;
-          min-width: 20px;
-          text-align: center;
-        }
-        .sidebar-bottom {
-          margin-top: auto;
-          padding: 16px 20px;
-          border-top: 1px solid var(--line);
-        }
-        .sidebar-bottom form button {
-          font-size: 13px;
-          color: var(--status-cancelled);
-          background: none;
-          border: none;
-          cursor: pointer;
-          padding: 0;
-        }
-
         /* ── Main ── */
-        .portal-main { flex: 1; min-width: 0; padding: 40px 48px; }
+        .portal-main { padding: 40px 48px; }
         .portal-greeting-name { font-size: 28px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; line-height: 1.2; margin: 0; }
         .portal-greeting-sub { font-size: 14px; color: #6b7f8a; margin: 4px 0 0; }
 
@@ -325,25 +255,6 @@ export default async function DashboardPage() {
 
         /* ── Mobile ── */
         @media (max-width: 767px) {
-          .portal-wrap { flex-direction: column; }
-          .portal-sidebar {
-            width: 100%;
-            min-width: 0;
-            height: auto;
-            position: static;
-            border-right: none;
-            border-bottom: 1px solid var(--line);
-            flex-direction: row;
-            align-items: center;
-            overflow-x: auto;
-            overflow-y: visible;
-          }
-          .sidebar-logo { border-bottom: none; padding: 14px 16px; white-space: nowrap; border-right: 1px solid var(--line); }
-          .sidebar-section { display: flex; flex-direction: row; padding: 0; flex-shrink: 0; }
-          .sidebar-sep { display: none; }
-          .nav-item { padding: 14px 14px; border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; }
-          .nav-item.active { border-left-color: transparent; border-bottom-color: var(--cyan); }
-          .sidebar-bottom { display: none; }
           .portal-main { padding: 24px 20px; }
           .next-card-body { flex-direction: column; }
           .next-date-col { border-right: none; border-bottom: 1px solid var(--line); min-width: 0; flex-direction: row; align-items: baseline; gap: 12px; padding: 18px 20px; }
@@ -354,40 +265,7 @@ export default async function DashboardPage() {
         }
       `}</style>
 
-      <div className="portal-wrap">
-
-        {/* ── Sidebar ── */}
-        <aside className="portal-sidebar">
-          <Link href="/" className="sidebar-logo">
-            DentálníKeramika
-          </Link>
-          <div className="sidebar-section">
-            <Link href="/portal/dashboard" className="nav-item active">
-              Přehled
-            </Link>
-            <Link href="/portal/rezervace" className="nav-item">
-              <span>Rezervace</span>
-              {upcoming.length > 0 && (
-                <span className="nav-badge">{upcoming.length}</span>
-              )}
-            </Link>
-            <a href="#" className="nav-item">Případy a data</a>
-            <a href="#" className="nav-item">Faktury</a>
-          </div>
-          <div className="sidebar-sep" />
-          <div className="sidebar-section">
-            <Link href="/portal/profil" className="nav-item">Ordinace a tým</Link>
-            <Link href="/portal/profil" className="nav-item">Přihlášení a bezpečnost</Link>
-          </div>
-          <div className="sidebar-bottom">
-            <form action="/api/dk/v1/auth/logout" method="POST">
-              <button type="submit">Odhlásit se</button>
-            </form>
-          </div>
-        </aside>
-
-        {/* ── Main content ── */}
-        <main className="portal-main">
+      <div className="portal-main">
 
           {/* Greeting */}
           <p className="portal-greeting-name">Dobrý den, {user?.first_name}</p>
@@ -531,8 +409,7 @@ export default async function DashboardPage() {
             </div>
           )}
 
-        </main>
-      </div>
+        </div>
     </>
   );
 }

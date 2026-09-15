@@ -50,7 +50,7 @@ export default function ZrusitPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--porcelain)" }}>
+    <div className="flex items-center justify-center py-24 px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-sm border p-8" style={{ borderColor: "var(--line)" }}>
         <h1 className="text-xl font-bold mb-1" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
           Zrušit rezervaci
@@ -103,6 +103,6 @@ export default function ZrusitPage() {
           </button>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

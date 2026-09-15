@@ -182,27 +182,17 @@ export default function PrelozitPage() {
 
   if (initError) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4" style={{ background: "var(--porcelain)" }}>
+      <div className="flex items-center justify-center py-24 px-4">
         <div className="bg-white rounded-2xl border p-8 text-center max-w-sm" style={{ borderColor: "var(--line)" }}>
           <p className="text-sm mb-4" style={{ color: "var(--status-cancelled)" }}>{initError}</p>
           <Link href="/portal/rezervace" style={{ color: "var(--cyan-deep)" }}>← Zpět na termíny</Link>
         </div>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main style={{ background: "var(--porcelain)", minHeight: "100vh" }}>
-      <nav className="flex items-center justify-between px-6 py-4 border-b bg-white" style={{ borderColor: "var(--line)" }}>
-        <Link href="/" className="font-bold text-lg" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
-          DentálníKeramika
-        </Link>
-        <Link href={`/portal/rezervace/${id}`} className="text-sm" style={{ color: "var(--cyan-deep)" }}>
-          ← Zpět na detail
-        </Link>
-      </nav>
-
-      <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-6">
+    <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-6">
         <div>
           <h1 className="text-2xl font-bold mb-1" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
             Přeložit termín
@@ -322,7 +312,6 @@ export default function PrelozitPage() {
             {submitError}
           </div>
         )}
-      </div>
-    </main>
+    </div>
   );
 }
