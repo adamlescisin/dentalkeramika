@@ -121,6 +121,22 @@ export default function OrdinaceDetailPage() {
               Registrováno {new Date(account.created_at).toLocaleDateString("cs-CZ")}
               {account.approved_at && ` · schváleno ${new Date(account.approved_at).toLocaleDateString("cs-CZ")}`}
             </p>
+            {reservations.length > 0 && (
+              <div className="flex gap-3 mt-3">
+                <div className="flex-1 rounded-lg px-4 py-3" style={{ background: "#f0f4ff", border: "1px solid #d0daf8" }}>
+                  <p className="text-xs font-medium" style={{ color: "#3a5ab0" }}>Minulé rezervace</p>
+                  <p className="text-2xl font-bold mt-0.5" style={{ color: "#1a3a7a" }}>
+                    {reservations.filter((r) => new Date(r.starts_at) < new Date()).length}
+                  </p>
+                </div>
+                <div className="flex-1 rounded-lg px-4 py-3" style={{ background: "#f0faf5", border: "1px solid #b8e8d0" }}>
+                  <p className="text-xs font-medium" style={{ color: "#1a6b3c" }}>Nadcházející rezervace</p>
+                  <p className="text-2xl font-bold mt-0.5" style={{ color: "#0f4a28" }}>
+                    {reservations.filter((r) => new Date(r.starts_at) >= new Date()).length}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
