@@ -5,15 +5,13 @@ export default function HomePage() {
     <main className="min-h-screen" style={{ background: "var(--porcelain)" }}>
       {/* Nav */}
       <nav
-        className="flex items-center justify-between px-6 py-4 border-b"
+        className="flex items-center justify-between px-6 py-3 border-b"
         style={{ borderColor: "var(--line)", background: "#fff" }}
       >
-        <span
-          className="text-xl font-bold tracking-tight"
-          style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}
-        >
-          DentálníKeramika
-        </span>
+        <Link href="/">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.webp" alt="DentálníKeramika" style={{ height: 44, width: "auto", display: "block" }} />
+        </Link>
         <div className="flex items-center gap-4">
           <Link
             href="/prihlasit"
@@ -144,16 +142,46 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer
-        className="border-t px-6 py-8 text-sm"
-        style={{ borderColor: "var(--line)", color: "#4a5f6a" }}
-      >
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-4 justify-between">
-          <span>© 2026 DentálníKeramika</span>
-          <div className="flex gap-6">
-            <Link href="/prihlasit">Přihlásit se</Link>
-            <Link href="/registrace">Registrace</Link>
-            <Link href="mailto:info@dentalkeramika.cz">Kontakt</Link>
+      <footer style={{ background: "var(--ink)", color: "#c8d8e0" }}>
+        <div className="max-w-5xl mx-auto px-6 py-14 grid gap-12" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
+
+          {/* Brand column */}
+          <div className="flex flex-col gap-5">
+            <div style={{ background: "#fff", borderRadius: 12, padding: "10px 16px", display: "inline-block", alignSelf: "flex-start" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.webp" alt="DentálníKeramika" style={{ height: 48, width: "auto", display: "block" }} />
+            </div>
+            <p className="text-sm leading-relaxed" style={{ color: "#8ca8b8", maxWidth: 280 }}>
+              Laboratoř s více než dvanácti lety zkušeností. Kompletní servis pro stomatologické ordinace od skenu po glazuru.
+            </p>
+          </div>
+
+          {/* Portál column */}
+          <div className="flex flex-col gap-4">
+            <p className="text-sm font-bold" style={{ color: "#fff", letterSpacing: "0.01em" }}>Portál</p>
+            <div className="flex flex-col gap-3 text-sm">
+              <Link href="/rezervace" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">Rezervace skenu</Link>
+              <Link href="/portal/rezervace" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">Moje rezervace</Link>
+              <Link href="/portal/profil" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">Údaje ordinace</Link>
+              <Link href="/prihlasit" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">Přihlášení</Link>
+            </div>
+          </div>
+
+          {/* Kontakt column */}
+          <div className="flex flex-col gap-4">
+            <p className="text-sm font-bold" style={{ color: "#fff", letterSpacing: "0.01em" }}>Kontakt</p>
+            <div className="flex flex-col gap-3 text-sm" style={{ color: "#c8d8e0" }}>
+              <a href="tel:+420733240842" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">+420 733 240 842</a>
+              <a href="mailto:info@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">info@dentalkeramika.cz</a>
+              <span>Hartigova 235/31<br />Praha 3 – Žižkov</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom strip */}
+        <div className="border-t px-6 py-5 text-xs" style={{ borderColor: "rgba(255,255,255,.1)", color: "#5a7a8a" }}>
+          <div className="max-w-5xl mx-auto">
+            © {new Date().getFullYear()} DentálníKeramika s.r.o. Všechna práva vyhrazena.
           </div>
         </div>
       </footer>
