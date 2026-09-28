@@ -112,7 +112,7 @@ export default function HomePage() {
       {/* 4-step collaboration flow */}
       <section
         className="py-16 px-6"
-        style={{ background: "var(--ink)", color: "#fff" }}
+        style={{ background: "#2e4050", color: "#fff" }}
       >
         <div className="max-w-5xl mx-auto">
           <h2
