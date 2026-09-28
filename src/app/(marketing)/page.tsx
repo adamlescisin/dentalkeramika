@@ -5,28 +5,30 @@ export default function HomePage() {
     <main className="min-h-screen" style={{ background: "var(--porcelain)" }}>
       {/* Nav */}
       <nav
-        className="flex items-center justify-between px-6 py-3 border-b"
+        className="border-b"
         style={{ borderColor: "var(--line)", background: "#fff" }}
       >
-        <Link href="/">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.webp" alt="DentálníKeramika" style={{ height: 44, width: "auto", display: "block" }} />
-        </Link>
-        <div className="flex items-center gap-4">
-          <Link
-            href="/prihlasit"
-            className="text-sm font-medium"
-            style={{ color: "var(--cyan-deep)" }}
-          >
-            Přihlásit se
+        <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
+          <Link href="/">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.webp" alt="DentálníKeramika" style={{ height: 70, width: "auto", display: "block" }} />
           </Link>
-          <Link
-            href="/rezervace"
-            className="text-sm font-semibold px-4 py-2 rounded-lg text-white"
-            style={{ background: "var(--cyan)" }}
-          >
-            Rezervovat termín
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/prihlasit"
+              className="text-sm font-medium"
+              style={{ color: "var(--cyan-deep)" }}
+            >
+              Přihlásit se
+            </Link>
+            <Link
+              href="/rezervace"
+              className="text-sm font-semibold px-4 py-2 rounded-lg text-white"
+              style={{ background: "var(--cyan)" }}
+            >
+              Rezervovat termín
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -149,7 +151,7 @@ export default function HomePage() {
           <div className="flex flex-col gap-5">
             <div style={{ background: "#fff", borderRadius: 12, padding: "10px 16px", display: "inline-block", alignSelf: "flex-start" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.webp" alt="DentálníKeramika" style={{ height: 48, width: "auto", display: "block" }} />
+              <img src="/logo.webp" alt="DentálníKeramika" style={{ height: 70, width: "auto", display: "block" }} />
             </div>
             <p className="text-sm leading-relaxed" style={{ color: "#8ca8b8", maxWidth: 280 }}>
               Laboratoř s více než dvanácti lety zkušeností. Kompletní servis pro stomatologické ordinace od skenu po glazuru.
