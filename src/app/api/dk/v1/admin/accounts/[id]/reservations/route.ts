@@ -23,7 +23,7 @@ export async function GET(
   const { id } = await params;
 
   const [account] = await db
-    .select({ id: dk_accounts.id, name: dk_accounts.name, status: dk_accounts.status, created_at: dk_accounts.created_at, approved_at: dk_accounts.approved_at, billing_email: dk_accounts.billing_email, ico: dk_accounts.ico })
+    .select({ id: dk_accounts.id, name: dk_accounts.name, status: dk_accounts.status, created_at: dk_accounts.created_at, approved_at: dk_accounts.approved_at, billing_email: dk_accounts.billing_email, ico: dk_accounts.ico, dic: dk_accounts.dic, billing_address: dk_accounts.billing_address })
     .from(dk_accounts)
     .where(eq(dk_accounts.id, id))
     .limit(1);
