@@ -214,6 +214,24 @@ export async function sendAccountApproved(
   });
 }
 
+export async function sendAdminOnboardingInvite(params: {
+  email: string;
+  practiceName: string;
+  setPasswordUrl: string;
+}): Promise<void> {
+  await send({
+    to: params.email,
+    subject: `Vítejte v DentálníKeramika — nastavte si přístup`,
+    html: `
+      <p>Dobrý den,</p>
+      <p>Váš účet pro ordinaci <strong>${params.practiceName}</strong> byl vytvořen.</p>
+      <p>Pro nastavení hesla a první přihlášení klikněte na odkaz níže (platný 72 hodin):</p>
+      <p><a href="${params.setPasswordUrl}">${params.setPasswordUrl}</a></p>
+      <p>Tým DentálníKeramika</p>
+    `,
+  });
+}
+
 export async function sendTeamInvite(params: {
   inviteeEmail: string;
   inviterName: string;
