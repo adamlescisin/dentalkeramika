@@ -10,6 +10,7 @@ import {
   dk_services,
   dk_locations,
   dk_technicians,
+  dk_booking_rules,
 } from "../../../../../db/schema";
 import { eq, and, gt, asc, notInArray } from "drizzle-orm";
 
@@ -96,6 +97,12 @@ export default async function DashboardPage() {
 
   const next = upcoming[0];
   const rest = upcoming.slice(1);
+
+  const [rules] = await db
+    .select({ contact_phone: dk_booking_rules.contact_phone, support_email: dk_booking_rules.support_email })
+    .from(dk_booking_rules)
+    .where(eq(dk_booking_rules.id, 1))
+    .limit(1);
 
   return (
     <>
@@ -262,7 +269,22 @@ export default async function DashboardPage() {
           .next-details-col { padding: 18px 20px; }
           .next-actions-col { border-left: none; border-top: 1px solid var(--line); flex-direction: row; flex-wrap: wrap; padding: 14px 20px; min-width: 0; }
           .action-btn { flex: 1; min-width: 120px; }
+          .dashboard-contact-footer { flex-direction: row; flex-wrap: wrap; gap: 16px 32px; }
         }
+
+        /* ── Contact footer ── */
+        .dashboard-contact-footer {
+          display: flex;
+          gap: 10px 40px;
+          flex-wrap: wrap;
+          margin-top: 36px;
+          padding-top: 20px;
+          border-top: 1px solid var(--line);
+        }
+        .dashboard-contact-item { display: flex; flex-direction: column; gap: 2px; }
+        .dashboard-contact-label { font-size: 10.5px; font-weight: 600; color: #9aacb8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .dashboard-contact-value { font-size: 13.5px; color: var(--cyan-deep); text-decoration: none; font-weight: 500; }
+        .dashboard-contact-value:hover { text-decoration: underline; }
       `}</style>
 
       <div className="portal-main">
@@ -419,6 +441,27 @@ export default async function DashboardPage() {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {(rules?.contact_phone || rules?.support_email) && (
+            <div className="dashboard-contact-footer">
+              {rules.contact_phone && (
+                <div className="dashboard-contact-item">
+                  <span className="dashboard-contact-label">Kontakt na specialistu</span>
+                  <a href={`tel:${rules.contact_phone.replace(/\s/g, "")}`} className="dashboard-contact-value">
+                    {rules.contact_phone}
+                  </a>
+                </div>
+              )}
+              {rules.support_email && (
+                <div className="dashboard-contact-item">
+                  <span className="dashboard-contact-label">Podpora portálu</span>
+                  <a href={`mailto:${rules.support_email}`} className="dashboard-contact-value">
+                    {rules.support_email}
+                  </a>
+                </div>
+              )}
             </div>
           )}
 
