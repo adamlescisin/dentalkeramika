@@ -31,10 +31,12 @@ export async function POST(
   await db.update(dk_reservations).set({ status: "confirmed", updated_at: new Date() }).where(eq(dk_reservations.id, id));
   await db.insert(dk_reservation_events).values({ reservation_id: id, actor: `admin:${session.userId}`, type: "confirmed" });
 
-  // Send confirmation email to the client (non-blocking — don't fail the confirm if email errors)
-  sendConfirmationEmail(row).catch((err) =>
-    console.error("[confirm] email failed for reservation", id, err instanceof Error ? err.message : err)
-  );
+  // Await the email so Vercel doesn't terminate the function before Resend responds.
+  try {
+    await sendConfirmationEmail(row);
+  } catch (err) {
+    console.error("[confirm] email failed for reservation", id, err instanceof Error ? err.message : err);
+  }
 
   return NextResponse.json({ ok: true });
 }

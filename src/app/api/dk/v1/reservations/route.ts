@@ -274,29 +274,30 @@ export async function POST(req: NextRequest) {
       .where(eq(dk_slot_holds.session_token, body.holdToken));
   }
 
-  // Send confirmation or pending-acknowledgement email (non-blocking)
-  if (status === "confirmed") {
-    sendConfirmationEmail({
-      userId: session.userId,
-      accountName: membership.account_name ?? "",
-      serviceName: service.name,
-      startsAt: start,
-      locationLabel: location.label,
-      locationAddress: `${location.street}, ${location.zip} ${location.city}`,
-      technicianName: technician.display_name,
-    }).catch((err) =>
-      console.error("[reservation] confirmation email failed for", reservationId, err instanceof Error ? err.message : err)
-    );
-  } else if (status === "pending") {
-    sendPendingEmail({
-      userId: session.userId,
-      serviceName: service.name,
-      startsAt: start,
-      locationLabel: location.label,
-      locationAddress: `${location.street}, ${location.zip} ${location.city}`,
-    }).catch((err) =>
-      console.error("[reservation] pending email failed for", reservationId, err instanceof Error ? err.message : err)
-    );
+  // Send confirmation or pending-acknowledgement email — awaited so Vercel
+  // doesn't terminate the function before the Resend request completes.
+  try {
+    if (status === "confirmed") {
+      await sendConfirmationEmail({
+        userId: session.userId,
+        accountName: membership.account_name ?? "",
+        serviceName: service.name,
+        startsAt: start,
+        locationLabel: location.label,
+        locationAddress: `${location.street}, ${location.zip} ${location.city}`,
+        technicianName: technician.display_name,
+      });
+    } else if (status === "pending") {
+      await sendPendingEmail({
+        userId: session.userId,
+        serviceName: service.name,
+        startsAt: start,
+        locationLabel: location.label,
+        locationAddress: `${location.street}, ${location.zip} ${location.city}`,
+      });
+    }
+  } catch (err) {
+    console.error("[reservation] email failed for", reservationId, err instanceof Error ? err.message : err);
   }
 
   // Sync to Google Calendar (async, non-blocking on failure — queued for retry)
