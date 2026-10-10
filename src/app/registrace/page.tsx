@@ -46,7 +46,12 @@ export default function RegisterPage() {
       if (res.ok) {
         const data = await res.json();
         setExistingPractice(data.exists ? data : null);
-        if (!data.exists) setJoinConfirmed(false);
+        if (!data.exists) {
+          setJoinConfirmed(false);
+        } else if (!nameVal || nameVal.length < 3) {
+          // Found via IČO only — auto-fill name so the required field passes
+          setPracticeName(data.name);
+        }
       }
     } catch { /* network error, ignore */ }
   }

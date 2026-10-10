@@ -306,7 +306,8 @@ async function handleRegister(req: NextRequest) {
     joinAccountId, // set when user confirmed they want to join an existing account
   } = body;
 
-  if (!firstName || !lastName || !email || !password || !practiceName) {
+  // practiceName is only required when creating a new practice (not when joining an existing one)
+  if (!firstName || !lastName || !email || !password || (!joinAccountId && !practiceName)) {
     return NextResponse.json(
       { error: "Vyplňte všechna povinná pole." },
       { status: 400 }
@@ -335,6 +336,32 @@ async function handleRegister(req: NextRequest) {
     .limit(1);
 
   if (existing) {
+    // If the existing user is trying to join a practice, add them (idempotent insert)
+    if (joinAccountId) {
+      const [existingAccount] = await db
+        .select({ id: dk_accounts.id })
+        .from(dk_accounts)
+        .where(eq(dk_accounts.id, joinAccountId))
+        .limit(1);
+
+      if (existingAccount) {
+        const [alreadyMember] = await db
+          .select({ id: dk_account_users.id })
+          .from(dk_account_users)
+          .where(and(eq(dk_account_users.account_id, existingAccount.id), eq(dk_account_users.user_id, existing.id)))
+          .limit(1);
+
+        if (!alreadyMember) {
+          await db.insert(dk_account_users).values({
+            account_id: existingAccount.id,
+            user_id: existing.id,
+            role: "booker",
+            status: "active",
+            accepted_at: new Date(),
+          });
+        }
+      }
+    }
     return NextResponse.json({ ok: true });
   }
 
