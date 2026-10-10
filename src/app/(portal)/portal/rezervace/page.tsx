@@ -133,30 +133,44 @@ export default async function ReservaceListPage({
               const canAct = ["pending", "confirmed", "rescheduled"].includes(r.status) &&
                 new Date(r.starts_at) > now;
               return (
-                <div key={r.id} className="flex items-center justify-between px-5 py-4 gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate" style={{ color: "var(--ink)" }}>
+                <div key={r.id} className="flex flex-col px-5 py-4 gap-2">
+                  {/* Top row: service name + status badge */}
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-semibold" style={{ color: "var(--ink)" }}>
                       {service.name}
                     </p>
-                    <p className="text-xs mt-0.5" style={{ color: "#6b7f8a" }}>
-                      {fmt(new Date(r.starts_at))} · {location.label}
-                    </p>
-                    <p className="text-xs mt-0.5" style={{ color: "#6b7f8a" }}>
-                      Objednal: <span style={{ color: "var(--ink)" }}>{r.requester_name}</span>
-                      {r.patient_name && (
-                        <> · Pacient: <span style={{ color: "var(--ink)" }}>{r.patient_name}</span></>
-                      )}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
                     <span
-                      className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                      className="text-xs font-semibold px-2.5 py-1 rounded-full shrink-0"
                       style={{ background: `${st.color}18`, color: st.color }}
                     >
                       {st.label}
                     </span>
+                  </div>
+
+                  {/* Date + location */}
+                  <p className="text-xs" style={{ color: "#6b7f8a" }}>
+                    {fmt(new Date(r.starts_at))} · {location.label}
+                  </p>
+
+                  {/* Requester / patient */}
+                  <p className="text-xs" style={{ color: "#6b7f8a" }}>
+                    Objednal: <span style={{ color: "var(--ink)" }}>{r.requester_name}</span>
+                    {r.patient_name && (
+                      <> · Pacient: <span style={{ color: "var(--ink)" }}>{r.patient_name}</span></>
+                    )}
+                  </p>
+
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-2 flex-wrap pt-1">
+                    <Link
+                      href={`/portal/rezervace/${r.id}`}
+                      className="text-xs px-3 py-1.5 rounded-lg border font-medium"
+                      style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                    >
+                      Detail
+                    </Link>
                     {canAct && (
-                      <div className="flex gap-2">
+                      <>
                         <Link
                           href={`/portal/rezervace/${r.id}/prelozit`}
                           className="text-xs px-3 py-1.5 rounded-lg border font-medium"
@@ -171,15 +185,8 @@ export default async function ReservaceListPage({
                         >
                           Zrušit
                         </Link>
-                      </div>
+                      </>
                     )}
-                    <Link
-                      href={`/portal/rezervace/${r.id}`}
-                      className="text-xs px-3 py-1.5 rounded-lg border font-medium"
-                      style={{ borderColor: "var(--line)", color: "var(--ink)" }}
-                    >
-                      Detail
-                    </Link>
                   </div>
                 </div>
               );
