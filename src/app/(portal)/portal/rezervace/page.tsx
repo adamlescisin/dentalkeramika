@@ -79,9 +79,15 @@ export default async function ReservaceListPage({
   return (
     <div className="max-w-4xl mx-auto px-6 py-8 flex flex-col gap-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <h1 className="text-2xl font-bold" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
-            Termíny
-          </h1>
+          <div className="flex items-center gap-4">
+            <Link href="/portal/dashboard" className="text-sm font-medium flex items-center gap-1.5"
+                  style={{ color: "var(--cyan-deep)", textDecoration: "none" }}>
+              ← Zpět
+            </Link>
+            <h1 className="text-2xl font-bold" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
+              Termíny
+            </h1>
+          </div>
           <Link
             href="/rezervace"
             className="text-sm font-semibold px-4 py-2 rounded-lg text-white"

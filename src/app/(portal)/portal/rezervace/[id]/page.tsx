@@ -8,6 +8,7 @@ import {
   dk_locations,
   dk_account_users,
   dk_reservation_events,
+  dk_users,
 } from "../../../../../../db/schema";
 import { eq, and, asc } from "drizzle-orm";
 
@@ -41,10 +42,12 @@ export default async function ReservaceDetailPage({
   const { id } = await params;
 
   const [row] = await db
-    .select({ reservation: dk_reservations, service: dk_services, location: dk_locations })
+    .select({ reservation: dk_reservations, service: dk_services, location: dk_locations,
+              creator: { first_name: dk_users.first_name, last_name: dk_users.last_name, email: dk_users.email, phone: dk_users.phone } })
     .from(dk_reservations)
     .innerJoin(dk_services, eq(dk_services.id, dk_reservations.service_id))
     .innerJoin(dk_locations, eq(dk_locations.id, dk_reservations.location_id))
+    .leftJoin(dk_users, eq(dk_users.id, dk_reservations.created_by_user_id))
     .where(eq(dk_reservations.id, id))
     .limit(1);
 
@@ -71,14 +74,22 @@ export default async function ReservaceDetailPage({
     .where(eq(dk_reservation_events.reservation_id, id))
     .orderBy(asc(dk_reservation_events.created_at));
 
-  const { reservation: r, service, location } = row;
+  const { reservation: r, service, location, creator } = row;
   const st = STATUS[r.status] ?? STATUS.pending;
   const now = new Date();
   const canAct = ["pending", "confirmed", "rescheduled"].includes(r.status) &&
     new Date(r.starts_at) > now;
 
+  const creatorName = creator ? `${creator.first_name} ${creator.last_name}`.trim() : r.requester_name;
+
   return (
     <div className="max-w-2xl mx-auto px-6 py-8 flex flex-col gap-6">
+        {/* Back link */}
+        <Link href="/portal/rezervace" className="text-sm font-medium flex items-center gap-1.5 w-fit"
+              style={{ color: "var(--cyan-deep)", textDecoration: "none" }}>
+          ← Zpět na přehled
+        </Link>
+
         {/* Header */}
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
@@ -112,6 +123,23 @@ export default async function ReservaceDetailPage({
               <span className="text-sm" style={{ color: "var(--ink)" }}>{value}</span>
             </div>
           ))}
+        </div>
+
+        {/* Requester */}
+        <div>
+          <h2 className="text-sm font-semibold mb-2" style={{ color: "var(--ink)" }}>Objednatel</h2>
+          <div className="bg-white rounded-xl border divide-y overflow-hidden" style={{ borderColor: "var(--line)" }}>
+            {[
+              ["Jméno", creatorName],
+              ["E-mail", creator?.email ?? "—"],
+              ...(creator?.phone ? [["Telefon", creator.phone]] : r.requester_phone ? [["Telefon", r.requester_phone]] : []),
+            ].map(([label, value]) => (
+              <div key={label} className="flex gap-4 px-5 py-3">
+                <span className="text-sm w-28 shrink-0 font-medium" style={{ color: "#6b7f8a" }}>{label}</span>
+                <span className="text-sm" style={{ color: "var(--ink)" }}>{value}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Actions */}
