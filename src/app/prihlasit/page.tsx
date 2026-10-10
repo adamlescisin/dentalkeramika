@@ -101,7 +101,7 @@ export default function LoginPage() {
                 boxShadow: tab === t ? "0 1px 3px rgba(0,0,0,.08)" : "none",
               }}
             >
-              {t === "password" ? "Heslo" : t === "magic" ? "Odkaz" : "Obnova"}
+              {t === "password" ? "Heslem" : t === "magic" ? "Odkazem" : "Nové heslo"}
             </button>
           ))}
         </div>

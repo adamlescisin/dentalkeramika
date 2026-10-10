@@ -303,6 +303,7 @@ async function handleRegister(req: NextRequest) {
     locationZip,
     locationLabel,
     locationAccessNote,
+    joinAccountId, // set when user confirmed they want to join an existing account
   } = body;
 
   if (!firstName || !lastName || !email || !password || !practiceName) {
@@ -350,6 +351,35 @@ async function handleRegister(req: NextRequest) {
     })
     .returning({ id: dk_users.id, email: dk_users.email });
 
+  // If joinAccountId is provided and the account exists, join it instead of creating a new one
+  if (joinAccountId) {
+    const [existingAccount] = await db
+      .select({ id: dk_accounts.id })
+      .from(dk_accounts)
+      .where(eq(dk_accounts.id, joinAccountId))
+      .limit(1);
+
+    if (existingAccount) {
+      await db.insert(dk_account_users).values({
+        account_id: existingAccount.id,
+        user_id: user.id,
+        role: "booker",
+        status: "active",
+        accepted_at: new Date(),
+      });
+
+      const verifyToken = await createAuthToken(user.id, "verify_email", 60);
+      const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/dk/v1/auth/verify?token=${verifyToken}&type=verify_email`;
+      try {
+        await sendVerificationEmail(user.email, verifyUrl);
+      } catch (err) {
+        console.error("[register] Verification email failed for", user.email, err instanceof Error ? err.message : err);
+      }
+
+      return NextResponse.json({ ok: true });
+    }
+  }
+
   const autoApprove = process.env.AUTO_APPROVE_ACCOUNTS !== "false";
 
   const [account] = await db
@@ -389,7 +419,6 @@ async function handleRegister(req: NextRequest) {
   try {
     await sendVerificationEmail(user.email, verifyUrl);
   } catch (err) {
-    // Account created successfully — email is best-effort; log for debugging.
     console.error("[register] Verification email failed for", user.email, err instanceof Error ? err.message : err);
   }
 

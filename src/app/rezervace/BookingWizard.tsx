@@ -95,10 +95,14 @@ export default function BookingWizard({
   services,
   locations,
   isPending,
+  userName = "",
+  userPhone = "",
 }: {
   services: Service[];
   locations: Location[];
   isPending: boolean;
+  userName?: string;
+  userPhone?: string;
 }) {
   const [step, setStep] = useState<Step>("service");
   const [service, setService] = useState<Service | null>(null);
@@ -114,8 +118,8 @@ export default function BookingWizard({
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
 
   // Details form state
-  const [requesterName, setRequesterName] = useState("");
-  const [requesterPhone, setRequesterPhone] = useState("");
+  const [requesterName, setRequesterName] = useState(userName);
+  const [requesterPhone, setRequesterPhone] = useState(userPhone);
   const [patientName, setPatientName] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);

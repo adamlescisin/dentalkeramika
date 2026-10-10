@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../../../../../../db";
-import { dk_accounts } from "../../../../../../../../db/schema";
-import { eq } from "drizzle-orm";
+import { dk_accounts, dk_reservations } from "../../../../../../../../db/schema";
+import { eq, and, ne } from "drizzle-orm";
 import { getAdminSession } from "../../../../../../../lib/admin-auth";
 
 export const dynamic = "force-dynamic";
@@ -46,4 +46,28 @@ export async function PATCH(
   const [updated] = await db.update(dk_accounts).set(patch).where(eq(dk_accounts.id, id)).returning();
   if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json({ data: updated });
+}
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const { id } = await params;
+
+  const [account] = await db.select({ id: dk_accounts.id }).from(dk_accounts).where(eq(dk_accounts.id, id)).limit(1);
+  if (!account) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Block deletion if there are non-cancelled reservations
+  const [active] = await db.select({ id: dk_reservations.id })
+    .from(dk_reservations)
+    .where(and(eq(dk_reservations.account_id, id), ne(dk_reservations.status, "cancelled")))
+    .limit(1);
+
+  if (active) {
+    return NextResponse.json({ error: "Ordinaci nelze smazat, má aktivní rezervace. Nejprve je zrušte." }, { status: 409 });
+  }
+
+  await db.delete(dk_accounts).where(eq(dk_accounts.id, id));
+  return NextResponse.json({ ok: true });
 }

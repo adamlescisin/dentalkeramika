@@ -56,6 +56,14 @@ export default function AdminOrdinace() {
     await load(); setBusy(null);
   }
 
+  async function deleteAccount(id: string, name: string) {
+    if (!confirm(`Opravdu smazat ordinaci „${name}"? Tato akce je nevratná.`)) return;
+    setBusy(id); setError(null);
+    const res = await fetch(`/api/dk/v1/admin/accounts/${id}`, { method: "DELETE" });
+    if (!res.ok) { const b = await res.json().catch(() => ({})); setError((b as { error?: string }).error ?? "Chyba."); }
+    await load(); setBusy(null);
+  }
+
   function setField(key: keyof typeof EMPTY_FORM, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
     setFormError(null);
@@ -248,6 +256,11 @@ export default function AdminOrdinace() {
                         Obnovit
                       </button>
                     )}
+                    <button onClick={() => deleteAccount(a.id, a.name)} disabled={busy === a.id}
+                      className="text-xs px-3 py-1.5 rounded-lg border disabled:opacity-50"
+                      style={{ borderColor: "#f07a7a", color: "var(--status-cancelled)" }}>
+                      Smazat
+                    </button>
                   </div>
                 </div>
               );

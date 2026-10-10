@@ -6,6 +6,7 @@ import {
   dk_locations,
   dk_account_users,
   dk_accounts,
+  dk_users,
 } from "../../../db/schema";
 import { eq, and } from "drizzle-orm";
 import BookingWizard from "./BookingWizard";
@@ -16,17 +17,17 @@ export default async function RezervacePage() {
   const session = await getSessionFromCookies();
   if (!session) redirect("/prihlasit?next=/rezervace");
 
-  const [membership] = await db
-    .select({ account: dk_accounts, role: dk_account_users.role })
-    .from(dk_account_users)
-    .innerJoin(dk_accounts, eq(dk_accounts.id, dk_account_users.account_id))
-    .where(
-      and(
-        eq(dk_account_users.user_id, session.userId),
-        eq(dk_account_users.status, "active")
-      )
-    )
-    .limit(1);
+  const [[membership], [user]] = await Promise.all([
+    db.select({ account: dk_accounts, role: dk_account_users.role })
+      .from(dk_account_users)
+      .innerJoin(dk_accounts, eq(dk_accounts.id, dk_account_users.account_id))
+      .where(and(eq(dk_account_users.user_id, session.userId), eq(dk_account_users.status, "active")))
+      .limit(1),
+    db.select({ first_name: dk_users.first_name, last_name: dk_users.last_name, phone: dk_users.phone })
+      .from(dk_users)
+      .where(eq(dk_users.id, session.userId))
+      .limit(1),
+  ]);
 
   if (!membership) redirect("/portal/dashboard");
 
@@ -56,12 +57,16 @@ export default async function RezervacePage() {
     .where(eq(dk_locations.account_id, membership.account.id));
 
   const isPending = membership.account.status === "pending";
+  const userName = user ? `${user.first_name} ${user.last_name}`.trim() : "";
+  const userPhone = user?.phone ?? "";
 
   return (
     <BookingWizard
       services={services}
       locations={locations}
       isPending={isPending}
+      userName={userName}
+      userPhone={userPhone}
     />
   );
 }

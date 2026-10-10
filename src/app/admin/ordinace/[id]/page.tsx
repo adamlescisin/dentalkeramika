@@ -4,6 +4,12 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { AdminShell } from "../../_components/AdminShell";
 
+type Location = {
+  id: string; label: string; street: string; city: string; zip: string;
+  access_note: string | null; contact_name: string | null; contact_phone: string | null;
+  is_default: boolean; created_at: string;
+};
+
 type Account = {
   id: string; name: string; status: string;
   billing_email: string | null; ico: string | null; dic: string | null;
@@ -86,12 +92,26 @@ export default function OrdinaceDetailPage() {
   const [addSaving, setAddSaving] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
+  // Locations state
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [locError, setLocError] = useState<string | null>(null);
+  const [showAddLoc, setShowAddLoc] = useState(false);
+  const EMPTY_LOC = { label: "", street: "", city: "", zip: "", access_note: "", contact_name: "", contact_phone: "" };
+  const [addLocForm, setAddLocForm] = useState(EMPTY_LOC);
+  const [addLocSaving, setAddLocSaving] = useState(false);
+  const [addLocError, setAddLocError] = useState<string | null>(null);
+  const [editingLoc, setEditingLoc] = useState<string | null>(null);
+  const [editLocForm, setEditLocForm] = useState(EMPTY_LOC);
+  const [editLocSaving, setEditLocSaving] = useState(false);
+  const [editLocError, setEditLocError] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const [resData, resMembers] = await Promise.all([
+      const [resData, resMembers, resLocs] = await Promise.all([
         fetch(`/api/dk/v1/admin/accounts/${id}/reservations`),
         fetch(`/api/dk/v1/admin/accounts/${id}/users`),
+        fetch(`/api/dk/v1/admin/accounts/${id}/locations`),
       ]);
       if (!resData.ok) {
         const b = await resData.json().catch(() => ({}));
@@ -104,6 +124,10 @@ export default function OrdinaceDetailPage() {
       if (resMembers.ok) {
         const mj = await resMembers.json();
         setMembers(mj.data ?? []);
+      }
+      if (resLocs.ok) {
+        const lj = await resLocs.json();
+        setLocations(lj.data ?? []);
       }
     } catch { setError("Síťová chyba."); }
     finally { setLoading(false); }
@@ -187,6 +211,61 @@ export default function OrdinaceDetailPage() {
     } else {
       const b = await res.json().catch(() => ({}));
       setAddError((b as { error?: string }).error ?? "Chyba při přidávání.");
+    }
+  }
+
+  async function addLocation(e: React.FormEvent) {
+    e.preventDefault();
+    setAddLocSaving(true); setAddLocError(null);
+    const res = await fetch(`/api/dk/v1/admin/accounts/${id}/locations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(addLocForm),
+    });
+    setAddLocSaving(false);
+    if (res.ok) {
+      setShowAddLoc(false);
+      setAddLocForm(EMPTY_LOC);
+      await load();
+    } else {
+      const b = await res.json().catch(() => ({}));
+      setAddLocError((b as { error?: string }).error ?? "Chyba při přidávání.");
+    }
+  }
+
+  function openLocEdit(loc: Location) {
+    setEditingLoc(loc.id);
+    setEditLocForm({
+      label: loc.label, street: loc.street, city: loc.city, zip: loc.zip,
+      access_note: loc.access_note ?? "", contact_name: loc.contact_name ?? "",
+      contact_phone: loc.contact_phone ?? "",
+    });
+    setEditLocError(null);
+  }
+
+  async function saveLocation(locId: string) {
+    setEditLocSaving(true); setEditLocError(null);
+    const res = await fetch(`/api/dk/v1/admin/accounts/${id}/locations/${locId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editLocForm),
+    });
+    setEditLocSaving(false);
+    if (res.ok) { setEditingLoc(null); await load(); }
+    else {
+      const b = await res.json().catch(() => ({}));
+      setEditLocError((b as { error?: string }).error ?? "Chyba při ukládání.");
+    }
+  }
+
+  async function deleteLocation(locId: string, label: string) {
+    if (!confirm(`Opravdu smazat adresu „${label}"?`)) return;
+    setLocError(null);
+    const res = await fetch(`/api/dk/v1/admin/accounts/${id}/locations/${locId}`, { method: "DELETE" });
+    if (res.ok) await load();
+    else {
+      const b = await res.json().catch(() => ({}));
+      setLocError((b as { error?: string }).error ?? "Nepodařilo se smazat adresu.");
     }
   }
 
@@ -429,6 +508,171 @@ export default function OrdinaceDetailPage() {
                             <button onClick={() => removeMember(m.user_id)}
                               className="text-xs px-3 py-1.5 rounded-lg border"
                               style={{ borderColor: "var(--line)", color: "var(--status-cancelled)" }}>Odebrat</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Locations section */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-4">
+                <h2 className="text-base font-semibold" style={{ color: "var(--ink)" }}>
+                  Adresy pro sken {locations.length > 0 && `(${locations.length})`}
+                </h2>
+                <button onClick={() => { setShowAddLoc((v) => !v); setAddLocError(null); }}
+                  className="text-xs font-medium px-3 py-1.5 rounded-lg border"
+                  style={{ borderColor: "var(--line)", color: "var(--cyan-deep)" }}>
+                  {showAddLoc ? "Zavřít" : "+ Přidat adresu"}
+                </button>
+              </div>
+
+              {locError && (
+                <div className="rounded-lg p-3 border text-sm" style={{ background: "#fff5f5", borderColor: "#f07a7a", color: "#7a1a1a" }}>{locError}</div>
+              )}
+
+              {showAddLoc && (
+                <form onSubmit={addLocation} className="bg-white rounded-xl border overflow-hidden" style={{ borderColor: "var(--line)" }}>
+                  <div className="px-5 py-4 border-b" style={{ borderColor: "var(--line)", background: "var(--porcelain)" }}>
+                    <p className="text-sm font-semibold" style={{ color: "var(--ink)" }}>Nová adresa</p>
+                  </div>
+                  <div className="px-5 py-4 flex flex-col gap-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="md:col-span-2">
+                        <label className={labelCls} style={{ color: "var(--ink)" }}>Popis *</label>
+                        <input required value={addLocForm.label} onChange={(e) => setAddLocForm((f) => ({ ...f, label: e.target.value }))}
+                          className={inputCls} style={inputStyle} placeholder="Hlavní ordinace" />
+                      </div>
+                      <div>
+                        <label className={labelCls} style={{ color: "var(--ink)" }}>Ulice a č.p. *</label>
+                        <input required value={addLocForm.street} onChange={(e) => setAddLocForm((f) => ({ ...f, street: e.target.value }))}
+                          className={inputCls} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label className={labelCls} style={{ color: "var(--ink)" }}>Město *</label>
+                        <input required value={addLocForm.city} onChange={(e) => setAddLocForm((f) => ({ ...f, city: e.target.value }))}
+                          className={inputCls} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label className={labelCls} style={{ color: "var(--ink)" }}>PSČ *</label>
+                        <input required value={addLocForm.zip} onChange={(e) => setAddLocForm((f) => ({ ...f, zip: e.target.value }))}
+                          className={inputCls} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label className={labelCls} style={{ color: "var(--ink)" }}>Kontaktní osoba</label>
+                        <input value={addLocForm.contact_name} onChange={(e) => setAddLocForm((f) => ({ ...f, contact_name: e.target.value }))}
+                          className={inputCls} style={inputStyle} />
+                      </div>
+                      <div>
+                        <label className={labelCls} style={{ color: "var(--ink)" }}>Kontaktní telefon</label>
+                        <input type="tel" value={addLocForm.contact_phone} onChange={(e) => setAddLocForm((f) => ({ ...f, contact_phone: e.target.value }))}
+                          className={inputCls} style={inputStyle} />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className={labelCls} style={{ color: "var(--ink)" }}>Přístupová poznámka</label>
+                        <input value={addLocForm.access_note} onChange={(e) => setAddLocForm((f) => ({ ...f, access_note: e.target.value }))}
+                          className={inputCls} style={inputStyle} placeholder="2. patro, parkování ve dvoře" />
+                      </div>
+                    </div>
+                    {addLocError && (
+                      <div className="rounded-lg p-3 border text-sm" style={{ background: "#fff5f5", borderColor: "#f07a7a", color: "#7a1a1a" }}>{addLocError}</div>
+                    )}
+                    <div className="flex justify-end gap-3">
+                      <button type="button" onClick={() => setShowAddLoc(false)}
+                        className="text-sm px-4 py-2 rounded-lg border" style={{ borderColor: "var(--line)", color: "#6b7f8a" }}>Zrušit</button>
+                      <button type="submit" disabled={addLocSaving}
+                        className="text-sm font-semibold px-5 py-2 rounded-lg text-white disabled:opacity-40" style={{ background: "var(--cyan)" }}>
+                        {addLocSaving ? "Přidávám…" : "Přidat adresu"}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+
+              {locations.length === 0 ? (
+                <div className="bg-white rounded-xl border p-5 text-center text-sm" style={{ borderColor: "var(--line)", color: "#6b7f8a" }}>Žádné adresy.</div>
+              ) : (
+                <div className="bg-white rounded-xl border divide-y overflow-hidden" style={{ borderColor: "var(--line)" }}>
+                  {locations.map((loc) => (
+                    <div key={loc.id} className="px-5 py-4 flex flex-col gap-3">
+                      {editingLoc === loc.id ? (
+                        <div className="flex flex-col gap-3">
+                          <div className="grid md:grid-cols-2 gap-3">
+                            <div className="md:col-span-2">
+                              <label className={labelCls} style={{ color: "var(--ink)" }}>Popis *</label>
+                              <input required value={editLocForm.label} onChange={(e) => setEditLocForm((f) => ({ ...f, label: e.target.value }))}
+                                className={inputCls} style={inputStyle} />
+                            </div>
+                            <div>
+                              <label className={labelCls} style={{ color: "var(--ink)" }}>Ulice a č.p. *</label>
+                              <input required value={editLocForm.street} onChange={(e) => setEditLocForm((f) => ({ ...f, street: e.target.value }))}
+                                className={inputCls} style={inputStyle} />
+                            </div>
+                            <div>
+                              <label className={labelCls} style={{ color: "var(--ink)" }}>Město *</label>
+                              <input required value={editLocForm.city} onChange={(e) => setEditLocForm((f) => ({ ...f, city: e.target.value }))}
+                                className={inputCls} style={inputStyle} />
+                            </div>
+                            <div>
+                              <label className={labelCls} style={{ color: "var(--ink)" }}>PSČ *</label>
+                              <input required value={editLocForm.zip} onChange={(e) => setEditLocForm((f) => ({ ...f, zip: e.target.value }))}
+                                className={inputCls} style={inputStyle} />
+                            </div>
+                            <div>
+                              <label className={labelCls} style={{ color: "var(--ink)" }}>Kontaktní osoba</label>
+                              <input value={editLocForm.contact_name} onChange={(e) => setEditLocForm((f) => ({ ...f, contact_name: e.target.value }))}
+                                className={inputCls} style={inputStyle} />
+                            </div>
+                            <div>
+                              <label className={labelCls} style={{ color: "var(--ink)" }}>Kontaktní telefon</label>
+                              <input type="tel" value={editLocForm.contact_phone} onChange={(e) => setEditLocForm((f) => ({ ...f, contact_phone: e.target.value }))}
+                                className={inputCls} style={inputStyle} />
+                            </div>
+                            <div className="md:col-span-2">
+                              <label className={labelCls} style={{ color: "var(--ink)" }}>Přístupová poznámka</label>
+                              <input value={editLocForm.access_note} onChange={(e) => setEditLocForm((f) => ({ ...f, access_note: e.target.value }))}
+                                className={inputCls} style={inputStyle} />
+                            </div>
+                          </div>
+                          {editLocError && (
+                            <div className="rounded-lg p-3 border text-sm" style={{ background: "#fff5f5", borderColor: "#f07a7a", color: "#7a1a1a" }}>{editLocError}</div>
+                          )}
+                          <div className="flex gap-2 justify-end">
+                            <button type="button" onClick={() => setEditingLoc(null)}
+                              className="text-xs px-3 py-1.5 rounded-lg border" style={{ borderColor: "var(--line)", color: "#6b7f8a" }}>Zrušit</button>
+                            <button type="button" disabled={editLocSaving} onClick={() => saveLocation(loc.id)}
+                              className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white disabled:opacity-40" style={{ background: "var(--cyan)" }}>
+                              {editLocSaving ? "Ukládám…" : "Uložit"}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-sm font-semibold" style={{ color: "var(--ink)" }}>{loc.label}</p>
+                              {loc.is_default && (
+                                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "#f0f4ff", color: "#1a3a7a" }}>výchozí</span>
+                              )}
+                            </div>
+                            <p className="text-xs mt-0.5" style={{ color: "#6b7f8a" }}>{loc.street}, {loc.zip} {loc.city}</p>
+                            {loc.contact_name && (
+                              <p className="text-xs mt-0.5" style={{ color: "#9aacb8" }}>
+                                {loc.contact_name}{loc.contact_phone && ` · ${loc.contact_phone}`}
+                              </p>
+                            )}
+                            {loc.access_note && <p className="text-xs mt-0.5 italic" style={{ color: "#9aacb8" }}>{loc.access_note}</p>}
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button onClick={() => openLocEdit(loc)}
+                              className="text-xs font-medium px-3 py-1.5 rounded-lg border"
+                              style={{ borderColor: "var(--line)", color: "var(--cyan-deep)" }}>Upravit</button>
+                            <button onClick={() => deleteLocation(loc.id, loc.label)}
+                              className="text-xs px-3 py-1.5 rounded-lg border"
+                              style={{ borderColor: "#f07a7a", color: "var(--status-cancelled)" }}>Smazat</button>
                           </div>
                         </div>
                       )}

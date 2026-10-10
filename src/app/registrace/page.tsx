@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect, useRef } from "react";
 import Link from "next/link";
 
 type Step = 1 | 2;
+type ExistingPractice = { id: string; name: string; ico: string | null } | null;
 
 export default function RegisterPage() {
   const [step, setStep] = useState<Step>(1);
@@ -28,6 +29,35 @@ export default function RegisterPage() {
   const [locationCity, setLocationCity] = useState("");
   const [locationZip, setLocationZip] = useState("");
   const [locationAccessNote, setLocationAccessNote] = useState("");
+
+  // Existing practice detection
+  const [existingPractice, setExistingPractice] = useState<ExistingPractice>(null);
+  const [joinConfirmed, setJoinConfirmed] = useState(false);
+  const checkTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  async function checkPractice(icoVal: string, nameVal: string) {
+    const params = new URLSearchParams();
+    if (icoVal && icoVal.length >= 7) params.set("ico", icoVal);
+    if (nameVal && nameVal.length >= 3) params.set("name", nameVal);
+    if (!params.toString()) { setExistingPractice(null); return; }
+
+    try {
+      const res = await fetch(`/api/dk/v1/auth/check-practice?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setExistingPractice(data.exists ? data : null);
+        if (!data.exists) setJoinConfirmed(false);
+      }
+    } catch { /* network error, ignore */ }
+  }
+
+  // Debounced check when ICO or practice name changes
+  useEffect(() => {
+    if (step !== 2) return;
+    if (checkTimeout.current) clearTimeout(checkTimeout.current);
+    checkTimeout.current = setTimeout(() => checkPractice(ico, practiceName), 600);
+    return () => { if (checkTimeout.current) clearTimeout(checkTimeout.current); };
+  }, [ico, practiceName, step]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ARES auto-fill (Czech company registry)
   async function lookupIco() {
@@ -55,6 +85,12 @@ export default function RegisterPage() {
       return;
     }
 
+    // If an existing practice was found but user hasn't confirmed joining, prompt them
+    if (existingPractice && !joinConfirmed) {
+      setError("Potvrďte, prosím, zda se chcete připojit k existující ordinaci.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -76,6 +112,7 @@ export default function RegisterPage() {
           locationCity,
           locationZip,
           locationAccessNote,
+          joinAccountId: existingPractice && joinConfirmed ? existingPractice.id : undefined,
         }),
       });
 
@@ -188,6 +225,28 @@ export default function RegisterPage() {
                 <label className="text-sm font-medium" style={{ color: "var(--ink)" }}>Název ordinace / praxe</label>
                 <input required className={inputClass} style={inputStyle} value={practiceName} onChange={e => setPracticeName(e.target.value)} />
               </div>
+
+              {existingPractice && (
+                <div className="rounded-xl border p-4" style={{ background: "#fffbea", borderColor: "#f0d58a" }}>
+                  <p className="text-sm font-semibold mb-1" style={{ color: "#7a5200" }}>
+                    Ordinace již existuje
+                  </p>
+                  <p className="text-sm mb-3" style={{ color: "#7a5200" }}>
+                    V systému jsme nalezli ordinaci <strong>{existingPractice.name}</strong>
+                    {existingPractice.ico && ` (IČO ${existingPractice.ico})`}.
+                    Chcete se připojit k této ordinaci jako člen (role: Rezervace)?
+                  </p>
+                  <label className="flex items-start gap-2 text-sm cursor-pointer" style={{ color: "#7a5200" }}>
+                    <input
+                      type="checkbox"
+                      checked={joinConfirmed}
+                      onChange={e => setJoinConfirmed(e.target.checked)}
+                      className="mt-0.5"
+                    />
+                    Ano, chci se připojit k existující ordinaci místo vytvoření nové.
+                  </label>
+                </div>
+              )}
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium" style={{ color: "var(--ink)" }}>Fakturační e-mail</label>
                 <input type="email" className={inputClass} style={inputStyle} value={billingEmail} onChange={e => setBillingEmail(e.target.value)} placeholder={email} />
