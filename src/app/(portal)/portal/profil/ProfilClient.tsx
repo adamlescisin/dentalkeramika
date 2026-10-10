@@ -538,6 +538,11 @@ function TeamSection({ initialTeam, isOwner }: { initialTeam: TeamMember[]; isOw
           </div>
         ))}
       </div>
+
+      <p className="text-xs mt-3" style={{ color: "#6b7f8a", lineHeight: 1.6 }}>
+        <strong style={{ color: "#4a5f6a" }}>Vlastník</strong> může přidávat a měnit podrobnosti ordinace, spravovat tým a vytvářet rezervace.{" "}
+        <strong style={{ color: "#4a5f6a" }}>Rezervující</strong> může pouze vytvářet nové rezervace pod stávajícím účtem.
+      </p>
     </section>
   );
 }
