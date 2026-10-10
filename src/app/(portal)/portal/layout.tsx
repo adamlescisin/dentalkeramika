@@ -141,7 +141,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
 
       <div className="portal-wrap">
         <aside className="portal-sidebar">
-          <Link href="/" className="sidebar-logo">
+          <Link href="/portal/dashboard" className="sidebar-logo">
             <Image src="/logo.webp" alt="DentálníKeramika" height={28} width={140} style={{ objectFit: "contain", display: "block" }} />
           </Link>
           <PortalNav upcomingCount={upcomingCount} />
