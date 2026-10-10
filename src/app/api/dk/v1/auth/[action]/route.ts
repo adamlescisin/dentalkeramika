@@ -460,7 +460,7 @@ async function handleLogout(req: NextRequest) {
     await db.delete(dk_sessions).where(eq(dk_sessions.id, session.sessionId));
   }
 
-  const res = NextResponse.redirect(new URL("/odhlaseni", req.url));
+  const res = NextResponse.redirect(new URL("/odhlaseni", req.url), 303);
   res.headers.set("Set-Cookie", clearSessionCookie());
   return res;
 }
