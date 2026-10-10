@@ -141,6 +141,12 @@ export default async function ReservaceListPage({
                     <p className="text-xs mt-0.5" style={{ color: "#6b7f8a" }}>
                       {fmt(new Date(r.starts_at))} · {location.label}
                     </p>
+                    <p className="text-xs mt-0.5" style={{ color: "#6b7f8a" }}>
+                      Objednal: <span style={{ color: "var(--ink)" }}>{r.requester_name}</span>
+                      {r.patient_name && (
+                        <> · Pacient: <span style={{ color: "var(--ink)" }}>{r.patient_name}</span></>
+                      )}
+                    </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <span

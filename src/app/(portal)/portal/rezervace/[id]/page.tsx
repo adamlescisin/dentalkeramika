@@ -133,6 +133,7 @@ export default async function ReservaceDetailPage({
               ["Jméno", creatorName],
               ["E-mail", creator?.email ?? "—"],
               ...(creator?.phone ? [["Telefon", creator.phone]] : r.requester_phone ? [["Telefon", r.requester_phone]] : []),
+              ...(r.patient_name ? [["Pacient", r.patient_name]] : []),
             ].map(([label, value]) => (
               <div key={label} className="flex gap-4 px-5 py-3">
                 <span className="text-sm w-28 shrink-0 font-medium" style={{ color: "#6b7f8a" }}>{label}</span>
