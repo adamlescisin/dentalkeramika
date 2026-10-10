@@ -82,12 +82,15 @@ function buildEmail(body: string, cta?: { label: string; url: string }): string 
                style="max-width:580px;background:#ffffff;border-radius:12px;overflow:hidden;
                       border:1px solid #D6E0E4;box-shadow:0 1px 3px rgba(35,50,61,0.06);">
 
-          <!-- Brand header -->
+          <!-- Brand header: cyan accent stripe + white logo area -->
           <tr>
-            <td style="background:#0697BC;padding:20px 32px 18px;">
+            <td style="background:#0697BC;height:5px;font-size:0;line-height:0;">&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="background:#ffffff;padding:20px 32px 18px;border-bottom:1px solid #D6E0E4;">
               <a href="${APP_URL}" style="text-decoration:none;display:inline-block;">
-                <img src="${APP_URL}/logo.webp" alt="DentálníKeramika" width="180" height="36"
-                     style="display:block;max-width:180px;height:auto;border:0;" />
+                <img src="${APP_URL}/logo.webp" alt="DentálníKeramika" width="200" height="52"
+                     style="display:block;max-width:200px;height:auto;border:0;" />
               </a>
             </td>
           </tr>
