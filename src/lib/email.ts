@@ -247,6 +247,7 @@ export async function sendReservationConfirmation(params: {
   locationAddress: string;
   technicianName: string;
   icsAttachment?: string;
+  reservationId?: string;
 }): Promise<void> {
   const dateStr = params.startsAt.toLocaleString("cs-CZ", {
     timeZone: "Europe/Prague",
@@ -269,10 +270,14 @@ export async function sendReservationConfirmation(params: {
     ]) +
     note(`Termín lze přeložit nebo zrušit přes <a href="${APP_URL}/portal/rezervace" style="color:#0697BC;text-decoration:none;">portál</a> nejpozději 24 hodin před návštěvou.`);
 
+  const reservationUrl = params.reservationId
+    ? `${APP_URL}/portal/rezervace/${params.reservationId}`
+    : `${APP_URL}/portal/rezervace`;
+
   await send({
     to: params.email,
     subject: `Termín potvrzen — ${params.serviceName}`,
-    html: buildEmail(body, { label: "Zobrazit rezervaci", url: `${APP_URL}/portal/rezervace` }),
+    html: buildEmail(body, { label: "Zobrazit rezervaci", url: reservationUrl }),
   });
 }
 
@@ -282,6 +287,7 @@ export async function sendReservationPending(params: {
   startsAt: Date;
   locationLabel: string;
   locationAddress: string;
+  reservationId?: string;
 }): Promise<void> {
   const dateStr = params.startsAt.toLocaleString("cs-CZ", {
     timeZone: "Europe/Prague",
@@ -303,10 +309,14 @@ export async function sendReservationPending(params: {
     ]) +
     note(`Stav žádosti můžete sledovat v <a href="${APP_URL}/portal/rezervace" style="color:#0697BC;text-decoration:none;">portálu</a>.`);
 
+  const reservationUrl = params.reservationId
+    ? `${APP_URL}/portal/rezervace/${params.reservationId}`
+    : `${APP_URL}/portal/rezervace`;
+
   await send({
     to: params.email,
     subject: `Žádost o termín přijata — ${params.serviceName}`,
-    html: buildEmail(body, { label: "Zobrazit rezervaci", url: `${APP_URL}/portal/rezervace` }),
+    html: buildEmail(body, { label: "Zobrazit rezervaci", url: reservationUrl }),
   });
 }
 

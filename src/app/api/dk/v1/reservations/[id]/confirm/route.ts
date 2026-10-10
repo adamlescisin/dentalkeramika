@@ -64,5 +64,6 @@ async function sendConfirmationEmail(row: typeof dk_reservations.$inferSelect) {
     locationLabel: location.label,
     locationAddress: `${location.street}, ${location.zip} ${location.city}`,
     technicianName: technician.display_name,
+    reservationId: row.id,
   });
 }

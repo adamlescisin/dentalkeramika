@@ -286,6 +286,7 @@ export async function POST(req: NextRequest) {
         locationLabel: location.label,
         locationAddress: `${location.street}, ${location.zip} ${location.city}`,
         technicianName: technician.display_name,
+        reservationId,
       });
     } else if (status === "pending") {
       await sendPendingEmail({
@@ -294,6 +295,7 @@ export async function POST(req: NextRequest) {
         startsAt: start,
         locationLabel: location.label,
         locationAddress: `${location.street}, ${location.zip} ${location.city}`,
+        reservationId,
       });
     }
   } catch (err) {
@@ -329,6 +331,7 @@ async function sendConfirmationEmail(params: {
   locationLabel: string;
   locationAddress: string;
   technicianName: string;
+  reservationId: string;
 }) {
   const [user] = await db
     .select({ email: dk_users.email })
@@ -346,6 +349,7 @@ async function sendConfirmationEmail(params: {
     locationLabel: params.locationLabel,
     locationAddress: params.locationAddress,
     technicianName: params.technicianName,
+    reservationId: params.reservationId,
   });
 }
 
@@ -355,6 +359,7 @@ async function sendPendingEmail(params: {
   startsAt: Date;
   locationLabel: string;
   locationAddress: string;
+  reservationId: string;
 }) {
   const [user] = await db
     .select({ email: dk_users.email })
@@ -370,6 +375,7 @@ async function sendPendingEmail(params: {
     startsAt: params.startsAt,
     locationLabel: params.locationLabel,
     locationAddress: params.locationAddress,
+    reservationId: params.reservationId,
   });
 }
 
