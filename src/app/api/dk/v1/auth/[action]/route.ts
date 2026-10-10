@@ -454,13 +454,13 @@ async function handleRegister(req: NextRequest) {
 
 // ─── Logout ───────────────────────────────────────────────────────────────────
 
-async function handleLogout(_req: NextRequest) {
+async function handleLogout(req: NextRequest) {
   const session = await getSessionFromCookies();
   if (session) {
     await db.delete(dk_sessions).where(eq(dk_sessions.id, session.sessionId));
   }
 
-  const res = NextResponse.json({ ok: true });
+  const res = NextResponse.redirect(new URL("/odhlaseni", req.url));
   res.headers.set("Set-Cookie", clearSessionCookie());
   return res;
 }

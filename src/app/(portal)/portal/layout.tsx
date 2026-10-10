@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getSessionFromCookies } from "../../../lib/auth";
 import { db } from "../../../../db";
@@ -140,7 +141,9 @@ export default async function PortalLayout({ children }: { children: ReactNode }
 
       <div className="portal-wrap">
         <aside className="portal-sidebar">
-          <Link href="/" className="sidebar-logo">DentálníKeramika</Link>
+          <Link href="/" className="sidebar-logo">
+            <Image src="/logo.webp" alt="DentálníKeramika" height={28} width={140} style={{ objectFit: "contain", display: "block" }} />
+          </Link>
           <PortalNav upcomingCount={upcomingCount} />
         </aside>
         <div className="portal-content">
