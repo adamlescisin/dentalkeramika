@@ -84,26 +84,11 @@ function buildEmail(body: string, cta?: { label: string; url: string }): string 
 
           <!-- Brand header -->
           <tr>
-            <td style="background:#0697BC;padding:22px 32px 20px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td>
-                    <!-- Logo mark -->
-                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                      <tr>
-                        <td style="background:#ffffff;border-radius:8px;padding:6px 10px;vertical-align:middle;">
-                          <span style="font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;
-                                       letter-spacing:0.05em;color:#0697BC;text-transform:uppercase;">DK</span>
-                        </td>
-                        <td style="padding-left:12px;vertical-align:middle;">
-                          <span style="font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:700;
-                                       color:#ffffff;letter-spacing:-0.01em;">DentálníKeramika</span>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
+            <td style="background:#0697BC;padding:20px 32px 18px;">
+              <a href="${APP_URL}" style="text-decoration:none;display:inline-block;">
+                <img src="${APP_URL}/logo.webp" alt="DentálníKeramika" width="180" height="36"
+                     style="display:block;max-width:180px;height:auto;border:0;" />
+              </a>
             </td>
           </tr>
 
@@ -284,6 +269,40 @@ export async function sendReservationConfirmation(params: {
   await send({
     to: params.email,
     subject: `Termín potvrzen — ${params.serviceName}`,
+    html: buildEmail(body, { label: "Zobrazit rezervaci", url: `${APP_URL}/portal/rezervace` }),
+  });
+}
+
+export async function sendReservationPending(params: {
+  email: string;
+  serviceName: string;
+  startsAt: Date;
+  locationLabel: string;
+  locationAddress: string;
+}): Promise<void> {
+  const dateStr = params.startsAt.toLocaleString("cs-CZ", {
+    timeZone: "Europe/Prague",
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const body =
+    p("Dobrý den,") +
+    p("Vaše žádost o termín byla přijata a čeká na schválení. O výsledku vás budeme informovat e-mailem.") +
+    detailTable([
+      ["Služba", params.serviceName],
+      ["Požadovaný termín", dateStr],
+      ["Adresa", `${params.locationLabel}<br /><span style="font-weight:400;color:#6b7f8a;">${params.locationAddress}</span>`],
+    ]) +
+    note(`Stav žádosti můžete sledovat v <a href="${APP_URL}/portal/rezervace" style="color:#0697BC;text-decoration:none;">portálu</a>.`);
+
+  await send({
+    to: params.email,
+    subject: `Žádost o termín přijata — ${params.serviceName}`,
     html: buildEmail(body, { label: "Zobrazit rezervaci", url: `${APP_URL}/portal/rezervace` }),
   });
 }

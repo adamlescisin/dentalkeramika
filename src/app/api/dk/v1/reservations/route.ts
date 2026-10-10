@@ -17,6 +17,7 @@ import { getSessionFromCookies } from "../../../../../lib/auth";
 import { createCalendarEvent } from "../../../../../lib/google-calendar";
 import {
   sendReservationConfirmation,
+  sendReservationPending,
 } from "../../../../../lib/email";
 
 export const dynamic = "force-dynamic";
@@ -273,7 +274,7 @@ export async function POST(req: NextRequest) {
       .where(eq(dk_slot_holds.session_token, body.holdToken));
   }
 
-  // Send confirmation email for confirmed reservations (non-blocking)
+  // Send confirmation or pending-acknowledgement email (non-blocking)
   if (status === "confirmed") {
     sendConfirmationEmail({
       userId: session.userId,
@@ -283,6 +284,14 @@ export async function POST(req: NextRequest) {
       locationLabel: location.label,
       locationAddress: `${location.street}, ${location.zip} ${location.city}`,
       technicianName: technician.display_name,
+    }).catch(console.error);
+  } else if (status === "pending") {
+    sendPendingEmail({
+      userId: session.userId,
+      serviceName: service.name,
+      startsAt: start,
+      locationLabel: location.label,
+      locationAddress: `${location.street}, ${location.zip} ${location.city}`,
     }).catch(console.error);
   }
 
@@ -332,6 +341,30 @@ async function sendConfirmationEmail(params: {
     locationLabel: params.locationLabel,
     locationAddress: params.locationAddress,
     technicianName: params.technicianName,
+  });
+}
+
+async function sendPendingEmail(params: {
+  userId: string;
+  serviceName: string;
+  startsAt: Date;
+  locationLabel: string;
+  locationAddress: string;
+}) {
+  const [user] = await db
+    .select({ email: dk_users.email })
+    .from(dk_users)
+    .where(eq(dk_users.id, params.userId))
+    .limit(1);
+
+  if (!user) return;
+
+  await sendReservationPending({
+    email: user.email,
+    serviceName: params.serviceName,
+    startsAt: params.startsAt,
+    locationLabel: params.locationLabel,
+    locationAddress: params.locationAddress,
   });
 }
 
