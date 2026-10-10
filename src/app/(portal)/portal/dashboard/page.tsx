@@ -268,11 +268,24 @@ export default async function DashboardPage() {
       <div className="portal-main">
 
           {/* Greeting */}
-          <p className="portal-greeting-name">Dobrý den, {user?.first_name}</p>
-          <p className="portal-greeting-sub">
-            {account.name}
-            {upcoming.length > 0 && ` · ${upcomingCountLabel(upcoming.length)}`}
-          </p>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <p className="portal-greeting-name">Dobrý den, {user?.first_name}</p>
+              <p className="portal-greeting-sub">
+                {account.name}
+                {upcoming.length > 0 && ` · ${upcomingCountLabel(upcoming.length)}`}
+              </p>
+            </div>
+            {!isPending && (
+              <Link
+                href="/rezervace"
+                className="text-sm font-semibold px-4 py-2 rounded-lg text-white shrink-0"
+                style={{ background: "var(--cyan)", textDecoration: "none" }}
+              >
+                + Nová rezervace
+              </Link>
+            )}
+          </div>
 
           {/* Pending banner */}
           {isPending && (

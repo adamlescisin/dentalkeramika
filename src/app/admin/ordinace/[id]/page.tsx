@@ -276,6 +276,12 @@ export default function OrdinaceDetailPage() {
     <AdminShell>
       <div className="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-6">
 
+        {/* Back link */}
+        <a href="/admin/ordinace" className="text-sm font-medium flex items-center gap-1.5 w-fit"
+           style={{ color: "var(--cyan-deep)", textDecoration: "none" }}>
+          ← Zpět na ordinace
+        </a>
+
         {/* Practice header */}
         {account && !showEdit && (
           <div className="bg-white rounded-xl border px-6 py-5 flex flex-col gap-1" style={{ borderColor: "var(--line)" }}>
