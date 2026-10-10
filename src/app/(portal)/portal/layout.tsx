@@ -4,7 +4,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { getSessionFromCookies } from "../../../lib/auth";
 import { db } from "../../../../db";
-import { dk_account_users, dk_reservations } from "../../../../db/schema";
+import { dk_account_users, dk_reservations, dk_booking_rules } from "../../../../db/schema";
 import { eq, and, gt, notInArray, or } from "drizzle-orm";
 import { PortalNav } from "./_components/PortalNav";
 
@@ -31,6 +31,12 @@ export default async function PortalLayout({ children }: { children: ReactNode }
       );
     upcomingCount = rows.length;
   }
+
+  const [rules] = await db
+    .select({ contact_phone: dk_booking_rules.contact_phone, support_email: dk_booking_rules.support_email })
+    .from(dk_booking_rules)
+    .where(eq(dk_booking_rules.id, 1))
+    .limit(1);
 
   return (
     <>
@@ -90,9 +96,21 @@ export default async function PortalLayout({ children }: { children: ReactNode }
           min-width: 20px;
           text-align: center;
         }
-        .sidebar-bottom {
+        .sidebar-contact {
           margin-top: auto;
-          padding: 16px 20px;
+          padding: 14px 20px;
+          border-top: 1px solid var(--line);
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .sidebar-contact-item { display: flex; flex-direction: column; gap: 1px; }
+        .sidebar-contact-label { font-size: 10.5px; font-weight: 600; color: #9aacb8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .sidebar-contact-value { font-size: 12.5px; color: var(--cyan-deep); text-decoration: none; }
+        .sidebar-contact-value:hover { text-decoration: underline; }
+
+        .sidebar-bottom {
+          padding: 14px 20px;
           border-top: 1px solid var(--line);
         }
         .sidebar-bottom form button {
@@ -135,6 +153,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
             white-space: nowrap;
           }
           .nav-item.active { border-left-color: transparent; border-bottom-color: var(--cyan); }
+          .sidebar-contact { display: none; }
           .sidebar-bottom { display: none; }
         }
       `}</style>
@@ -144,7 +163,11 @@ export default async function PortalLayout({ children }: { children: ReactNode }
           <Link href="/portal/dashboard" className="sidebar-logo">
             <Image src="/logo.webp" alt="DentálníKeramika" height={28} width={140} style={{ objectFit: "contain", display: "block" }} />
           </Link>
-          <PortalNav upcomingCount={upcomingCount} />
+          <PortalNav
+            upcomingCount={upcomingCount}
+            contactPhone={rules?.contact_phone}
+            supportEmail={rules?.support_email}
+          />
         </aside>
         <div className="portal-content">
           {children}

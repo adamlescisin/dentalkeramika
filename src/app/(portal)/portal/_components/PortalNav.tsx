@@ -7,17 +7,26 @@ const NAV: ({ href: string; label: string; exact?: boolean } | null)[] = [
   { href: "/portal/dashboard", label: "Přehled", exact: true },
   { href: "/portal/rezervace", label: "Rezervace" },
   null,
-  { href: "/portal/profil", label: "Ordinace a tým" },
-  { href: "/portal/profil", label: "Přihlášení a bezpečnost" },
+  { href: "/portal/profil", label: "Ordinace a účty" },
 ];
 
-export function PortalNav({ upcomingCount }: { upcomingCount: number }) {
+export function PortalNav({
+  upcomingCount,
+  contactPhone,
+  supportEmail,
+}: {
+  upcomingCount: number;
+  contactPhone?: string | null;
+  supportEmail?: string | null;
+}) {
   const pathname = usePathname();
 
   function isActive(href: string, exact?: boolean) {
     if (exact) return pathname === href;
     return pathname === href || pathname.startsWith(href + "/");
   }
+
+  const hasContact = contactPhone || supportEmail;
 
   return (
     <>
@@ -27,7 +36,7 @@ export function PortalNav({ upcomingCount }: { upcomingCount: number }) {
             <div key={i} className="sidebar-sep" />
           ) : (
             <Link
-              key={`${item.href}-${item.label}`}
+              key={item.href}
               href={item.href}
               className={`nav-item${isActive(item.href, item.exact) ? " active" : ""}`}
             >
@@ -39,6 +48,28 @@ export function PortalNav({ upcomingCount }: { upcomingCount: number }) {
           )
         )}
       </div>
+
+      {hasContact && (
+        <div className="sidebar-contact">
+          {contactPhone && (
+            <div className="sidebar-contact-item">
+              <span className="sidebar-contact-label">Kontakt na specialistu</span>
+              <a href={`tel:${contactPhone.replace(/\s/g, "")}`} className="sidebar-contact-value">
+                {contactPhone}
+              </a>
+            </div>
+          )}
+          {supportEmail && (
+            <div className="sidebar-contact-item">
+              <span className="sidebar-contact-label">Podpora portálu</span>
+              <a href={`mailto:${supportEmail}`} className="sidebar-contact-value">
+                {supportEmail}
+              </a>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="sidebar-bottom">
         <form action="/api/dk/v1/auth/logout" method="POST">
           <button type="submit">Odhlásit se</button>

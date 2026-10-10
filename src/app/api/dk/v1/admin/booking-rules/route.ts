@@ -18,7 +18,8 @@ export async function PATCH(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   const allowed = ["slot_step_min", "lead_time_hours", "buffers_inside_working_hours",
-                   "reschedule_cutoff_hours", "max_self_reschedules", "horizon_days"] as const;
+                   "reschedule_cutoff_hours", "max_self_reschedules", "horizon_days",
+                   "contact_phone", "support_email"] as const;
   const patch: Partial<typeof dk_booking_rules.$inferInsert> = {};
   for (const key of allowed) {
     if (key in body) (patch as Record<string, unknown>)[key] = body[key];

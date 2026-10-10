@@ -10,15 +10,22 @@ type Rules = {
   max_self_reschedules: number;
   horizon_days: number;
   buffers_inside_working_hours: boolean;
+  contact_phone: string | null;
+  support_email: string | null;
 };
 
-const FIELDS: { key: keyof Rules; label: string; desc: string; type: "number" | "boolean"; unit?: string }[] = [
+const BOOKING_FIELDS: { key: keyof Rules; label: string; desc: string; type: "number" | "boolean"; unit?: string }[] = [
   { key: "slot_step_min",                label: "Krok slotu",             desc: "Rozestup mezi nabízenými sloty.",              type: "number",  unit: "min" },
   { key: "lead_time_hours",              label: "Minimální předstih",     desc: "Kolik hodin předem lze rezervovat.",            type: "number",  unit: "h"   },
   { key: "reschedule_cutoff_hours",      label: "Uzávěrka přesunu",       desc: "Do kolika hodin před termínem lze přesunout.", type: "number",  unit: "h"   },
   { key: "max_self_reschedules",         label: "Max. přesuny klientem",  desc: "Kolikrát smí klient přesunout jednu rezervaci.", type: "number"        },
   { key: "horizon_days",                 label: "Horizont nabídky",       desc: "Kolik dní dopředu se zobrazují sloty.",         type: "number",  unit: "dní" },
   { key: "buffers_inside_working_hours", label: "Buffery uvnitř směny",   desc: "Buffer před/po termínu musí být v pracovní době.", type: "boolean"      },
+];
+
+const CONTACT_FIELDS: { key: "contact_phone" | "support_email"; label: string; desc: string; placeholder: string }[] = [
+  { key: "contact_phone", label: "Kontakt na specialistu", desc: "Telefonní číslo zobrazené klientům v portálu.", placeholder: "+420 123 456 789" },
+  { key: "support_email", label: "Podpora portálu",        desc: "E-mail technické podpory zobrazený klientům.",  placeholder: "podpora@example.cz" },
 ];
 
 export default function AdminNastaveni() {
@@ -40,7 +47,7 @@ export default function AdminNastaveni() {
     setLoading(false);
   }
 
-  function patch(key: keyof Rules, value: number | boolean) {
+  function patch(key: keyof Rules, value: number | boolean | string | null) {
     setDraft((prev) => prev ? { ...prev, [key]: value } : prev);
     setSaved(false);
   }
@@ -74,29 +81,54 @@ export default function AdminNastaveni() {
           <div className="bg-white rounded-xl border p-6 text-sm" style={{ borderColor: "var(--line)", color: "#6b7f8a" }}>Pravidla nejsou k dispozici.</div>
         ) : (
           <>
-            <div className="bg-white rounded-xl border divide-y overflow-hidden" style={{ borderColor: "var(--line)" }}>
-              {FIELDS.map(({ key, label, desc, type, unit }) => (
-                <div key={key} className="flex items-center justify-between gap-4 px-5 py-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold" style={{ color: "var(--ink)" }}>{label}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "#6b7f8a" }}>{desc}</p>
-                  </div>
-                  {type === "boolean" ? (
-                    <label className="flex items-center gap-2 cursor-pointer shrink-0">
-                      <input type="checkbox" checked={!!draft[key]} onChange={(e) => patch(key, e.target.checked)}
-                        className="w-5 h-5 rounded" style={{ accentColor: "var(--cyan)" }} />
-                      <span className="text-sm" style={{ color: "var(--ink)" }}>{draft[key] ? "Ano" : "Ne"}</span>
-                    </label>
-                  ) : (
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <input type="number" value={draft[key] as number} onChange={(e) => patch(key, Number(e.target.value))} min={0}
-                        className="w-20 border rounded-lg px-3 py-1.5 text-sm text-right focus:outline-none focus:ring-2"
-                        style={{ borderColor: "var(--line)", color: "var(--ink)" }} />
-                      {unit && <span className="text-xs" style={{ color: "#6b7f8a" }}>{unit}</span>}
+            <div>
+              <h2 className="text-sm font-semibold mb-2" style={{ color: "var(--ink)" }}>Pravidla rezervací</h2>
+              <div className="bg-white rounded-xl border divide-y overflow-hidden" style={{ borderColor: "var(--line)" }}>
+                {BOOKING_FIELDS.map(({ key, label, desc, type, unit }) => (
+                  <div key={key} className="flex items-center justify-between gap-4 px-5 py-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold" style={{ color: "var(--ink)" }}>{label}</p>
+                      <p className="text-xs mt-0.5" style={{ color: "#6b7f8a" }}>{desc}</p>
                     </div>
-                  )}
-                </div>
-              ))}
+                    {type === "boolean" ? (
+                      <label className="flex items-center gap-2 cursor-pointer shrink-0">
+                        <input type="checkbox" checked={!!draft[key]} onChange={(e) => patch(key, e.target.checked)}
+                          className="w-5 h-5 rounded" style={{ accentColor: "var(--cyan)" }} />
+                        <span className="text-sm" style={{ color: "var(--ink)" }}>{draft[key] ? "Ano" : "Ne"}</span>
+                      </label>
+                    ) : (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <input type="number" value={draft[key] as number} onChange={(e) => patch(key, Number(e.target.value))} min={0}
+                          className="w-20 border rounded-lg px-3 py-1.5 text-sm text-right focus:outline-none focus:ring-2"
+                          style={{ borderColor: "var(--line)", color: "var(--ink)" }} />
+                        {unit && <span className="text-xs" style={{ color: "#6b7f8a" }}>{unit}</span>}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-sm font-semibold mb-2" style={{ color: "var(--ink)" }}>Kontaktní údaje pro klienty</h2>
+              <div className="bg-white rounded-xl border divide-y overflow-hidden" style={{ borderColor: "var(--line)" }}>
+                {CONTACT_FIELDS.map(({ key, label, desc, placeholder }) => (
+                  <div key={key} className="flex items-center justify-between gap-4 px-5 py-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold" style={{ color: "var(--ink)" }}>{label}</p>
+                      <p className="text-xs mt-0.5" style={{ color: "#6b7f8a" }}>{desc}</p>
+                    </div>
+                    <input
+                      type="text"
+                      value={draft[key] ?? ""}
+                      onChange={(e) => patch(key, e.target.value || null as unknown as string)}
+                      placeholder={placeholder}
+                      className="w-48 border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 shrink-0"
+                      style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
 
             {error && <div className="rounded-xl p-4 border text-sm" style={{ background: "#fff5f5", borderColor: "#f07a7a", color: "#7a1a1a" }}>{error}</div>}

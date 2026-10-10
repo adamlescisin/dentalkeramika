@@ -297,6 +297,8 @@ export const dk_booking_rules = pgTable("dk_booking_rules", {
     .default(24),
   max_self_reschedules: integer("max_self_reschedules").notNull().default(2),
   horizon_days: integer("horizon_days").notNull().default(90),
+  contact_phone: varchar("contact_phone", { length: 30 }),
+  support_email: varchar("support_email", { length: 254 }),
 });
 
 // ─── Slot holds ───────────────────────────────────────────────────────────────
