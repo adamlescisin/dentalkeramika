@@ -284,7 +284,9 @@ export async function POST(req: NextRequest) {
       locationLabel: location.label,
       locationAddress: `${location.street}, ${location.zip} ${location.city}`,
       technicianName: technician.display_name,
-    }).catch(console.error);
+    }).catch((err) =>
+      console.error("[reservation] confirmation email failed for", reservationId, err instanceof Error ? err.message : err)
+    );
   } else if (status === "pending") {
     sendPendingEmail({
       userId: session.userId,
@@ -292,7 +294,9 @@ export async function POST(req: NextRequest) {
       startsAt: start,
       locationLabel: location.label,
       locationAddress: `${location.street}, ${location.zip} ${location.city}`,
-    }).catch(console.error);
+    }).catch((err) =>
+      console.error("[reservation] pending email failed for", reservationId, err instanceof Error ? err.message : err)
+    );
   }
 
   // Sync to Google Calendar (async, non-blocking on failure — queued for retry)
