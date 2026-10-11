@@ -213,10 +213,10 @@ export default function HomePage() {
           <div className="flex flex-col gap-4">
             <p className="text-sm font-bold" style={{ color: "#fff", letterSpacing: "0.01em" }}>Klientský portál</p>
             <div className="flex flex-col gap-3 text-sm">
+              <Link href="/prihlasit" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">Přihlášení</Link>
               <Link href="/rezervace" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">Rezervace skenu</Link>
               <Link href="/portal/rezervace" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">Moje rezervace</Link>
               <Link href="/portal/profil" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">Údaje ordinace</Link>
-              <Link href="/prihlasit" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">Přihlášení</Link>
             </div>
           </div>
 
@@ -225,15 +225,9 @@ export default function HomePage() {
             <p className="text-sm font-bold" style={{ color: "#fff", letterSpacing: "0.01em" }}>Kontakty</p>
             <div className="flex flex-col gap-3 text-sm">
               <a href="tel:+420733240842" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">+420 733 240 842</a>
-              <a href="mailto:info@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">
-                ✉ info@dentalkeramika.cz <span style={{ opacity: 0.6, fontSize: "0.85em" }}>obecné dotazy</span>
-              </a>
-              <a href="mailto:cad@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">
-                ✉ cad@dentalkeramika.cz <span style={{ opacity: 0.6, fontSize: "0.85em" }}>STL soubory</span>
-              </a>
-              <a href="mailto:foto@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">
-                ✉ foto@dentalkeramika.cz <span style={{ opacity: 0.6, fontSize: "0.85em" }}>foto podklady</span>
-              </a>
+              <a href="mailto:info@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">info@dentalkeramika.cz</a>
+              <a href="mailto:cad@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">cad@dentalkeramika.cz</a>
+              <a href="mailto:foto@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">foto@dentalkeramika.cz</a>
             </div>
           </div>
 
@@ -241,7 +235,15 @@ export default function HomePage() {
           <div className="flex flex-col gap-4">
             <p className="text-sm font-bold" style={{ color: "#fff", letterSpacing: "0.01em" }}>Adresa</p>
             <div className="flex flex-col gap-3 text-sm" style={{ color: "#c8d8e0" }}>
-              <span>Hartigova 235/31<br />Praha 3 – Žižkov</span>
+              <a
+                href="https://maps.google.com/?q=31m%2C+Hartigova+2453%2F235%2C+130+00+Praha+3-%C5%BDi%C5%BEkov%2C+%C4%8Cesko&ftid=0x470b933825fa178f%3A0x2c4aff753663a41d&g_mp=CiVnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLkdldFBsYWNlEAMYASAF&hl=en-US&source=embed"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#c8d8e0", textDecoration: "none" }}
+                className="hover:text-white transition-colors"
+              >
+                Hartigova 235/31<br />Praha 3 – Žižkov
+              </a>
               <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: "10px" }}>
                 <p className="font-semibold mb-1.5" style={{ color: "#fff" }}>Pracovní doba</p>
                 <p>Po–Pá &nbsp; 9:00–17:00</p>
