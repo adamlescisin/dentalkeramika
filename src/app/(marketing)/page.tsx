@@ -143,24 +143,75 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* STL scanners */}
+      <section className="py-16 px-6" style={{ background: "var(--porcelain)" }}>
+        <div className="max-w-5xl mx-auto">
+          <h2
+            className="text-2xl font-bold mb-3"
+            style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}
+          >
+            Přijímáme STL podklady následujících skenerů
+          </h2>
+          <p className="text-sm mb-10 max-w-2xl" style={{ color: "#4a5f6a", lineHeight: 1.7 }}>
+            Pokud nám chcete zaslat podklady ve formátu STL, můžete využít relevantní komunikační portál. Pokud ještě s naší laboratoří nespolupracujete, bude nejprve nutné vytvořit v daném portálu registraci. Po jejím schválení již nebude problém podklady zasílat přímo.
+          </p>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
+            {[
+              { brand: "3Shape",          portal: "3Shape Communicate",      url: "3shape.com" },
+              { brand: "Medit",           portal: "Medit Linkk",             url: "meditlink.com" },
+              { brand: "Dentsply Sirona", portal: "Connect Case Center Inbox", url: "dentsplysirona.com" },
+              { brand: "Dexis",           portal: "Dexis IS Connect",        url: "dentalconnect.dexis.com" },
+              { brand: "ITero",           portal: "My iTero",                url: "itero.com" },
+              { brand: "Shining 3D",      portal: "Shining 3D Cloud",        url: "shining3d.com" },
+            ].map((s) => (
+              <div
+                key={s.brand}
+                className="rounded-xl px-5 py-4 flex flex-col gap-1"
+                style={{ background: "#fff", border: "1px solid var(--line)" }}
+              >
+                <p className="font-bold text-base" style={{ color: "var(--ink)" }}>{s.brand}</p>
+                <p className="text-sm" style={{ color: "#4a5f6a" }}>{s.portal}</p>
+                <p className="text-xs" style={{ color: "#9aacb8" }}>{s.url}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center py-6 rounded-xl" style={{ background: "#fff", border: "1px solid var(--line)" }}>
+            <p className="text-sm mb-2" style={{ color: "#4a5f6a" }}>
+              Pokud chcete zaslat STL své zakázky přímo emailem, můžete jej zaslat na adresu
+            </p>
+            <a
+              href="mailto:cad@dentalkeramika.cz"
+              className="text-2xl font-bold"
+              style={{ color: "var(--cyan-deep)", textDecoration: "none" }}
+            >
+              cad@dentalkeramika.cz
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer style={{ background: "var(--ink)", color: "#c8d8e0" }}>
-        <div className="max-w-5xl mx-auto px-6 py-14 grid gap-12" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
-
-          {/* Brand column */}
+        <div
+          className="max-w-5xl mx-auto px-6 py-14 grid gap-10"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}
+        >
+          {/* a) Brand */}
           <div className="flex flex-col gap-5">
             <div style={{ background: "#fff", borderRadius: 12, padding: "10px 16px", display: "inline-block", alignSelf: "flex-start" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.webp" alt="DentálníKeramika" style={{ height: 70, width: "auto", display: "block" }} />
             </div>
-            <p className="text-sm leading-relaxed" style={{ color: "#8ca8b8", maxWidth: 280 }}>
+            <p className="text-sm leading-relaxed" style={{ color: "#8ca8b8", maxWidth: 260 }}>
               Laboratoř s více než 14 lety zkušeností. Kompletní servis pro stomatologické ordinace od skenu po glazuru.
             </p>
           </div>
 
-          {/* Portál column */}
+          {/* b) Klientský portál */}
           <div className="flex flex-col gap-4">
-            <p className="text-sm font-bold" style={{ color: "#fff", letterSpacing: "0.01em" }}>Portál</p>
+            <p className="text-sm font-bold" style={{ color: "#fff", letterSpacing: "0.01em" }}>Klientský portál</p>
             <div className="flex flex-col gap-3 text-sm">
               <Link href="/rezervace" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">Rezervace skenu</Link>
               <Link href="/portal/rezervace" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">Moje rezervace</Link>
@@ -169,15 +220,33 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Kontakt column */}
+          {/* c) Kontakty */}
           <div className="flex flex-col gap-4">
-            <p className="text-sm font-bold" style={{ color: "#fff", letterSpacing: "0.01em" }}>Kontakt</p>
-            <div className="flex flex-col gap-3 text-sm" style={{ color: "#c8d8e0" }}>
+            <p className="text-sm font-bold" style={{ color: "#fff", letterSpacing: "0.01em" }}>Kontakty</p>
+            <div className="flex flex-col gap-3 text-sm">
               <a href="tel:+420733240842" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">+420 733 240 842</a>
-              <a href="mailto:info@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">✉ info@dentalkeramika.cz <span style={{ opacity: 0.6, fontSize: "0.85em" }}>obecné dotazy</span></a>
-              <a href="mailto:cad@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">✉ cad@dentalkeramika.cz <span style={{ opacity: 0.6, fontSize: "0.85em" }}>STL soubory</span></a>
-              <a href="mailto:foto@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">✉ foto@dentalkeramika.cz <span style={{ opacity: 0.6, fontSize: "0.85em" }}>foto podklady</span></a>
+              <a href="mailto:info@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">
+                ✉ info@dentalkeramika.cz <span style={{ opacity: 0.6, fontSize: "0.85em" }}>obecné dotazy</span>
+              </a>
+              <a href="mailto:cad@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">
+                ✉ cad@dentalkeramika.cz <span style={{ opacity: 0.6, fontSize: "0.85em" }}>STL soubory</span>
+              </a>
+              <a href="mailto:foto@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">
+                ✉ foto@dentalkeramika.cz <span style={{ opacity: 0.6, fontSize: "0.85em" }}>foto podklady</span>
+              </a>
+            </div>
+          </div>
+
+          {/* d) Adresa + hodiny */}
+          <div className="flex flex-col gap-4">
+            <p className="text-sm font-bold" style={{ color: "#fff", letterSpacing: "0.01em" }}>Adresa</p>
+            <div className="flex flex-col gap-3 text-sm" style={{ color: "#c8d8e0" }}>
               <span>Hartigova 235/31<br />Praha 3 – Žižkov</span>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,.1)", paddingTop: "10px" }}>
+                <p className="font-semibold mb-1.5" style={{ color: "#fff" }}>Pracovní doba</p>
+                <p>Po–Pá &nbsp; 9:00–17:00</p>
+                <p style={{ color: "#5a7a8a" }}>So–Ne &nbsp; zavřeno</p>
+              </div>
             </div>
           </div>
         </div>
