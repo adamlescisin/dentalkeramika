@@ -106,6 +106,14 @@ export default function LoginPage() {
           ))}
         </div>
 
+        <p className="text-xs mb-4 leading-relaxed" style={{ color: "#6b7f8a" }}>
+          {tab === "password"
+            ? "Pokud znáte svůj přihlašovací email a heslo, přihlaste se zde."
+            : tab === "magic"
+            ? "Pokud zadáte svou registrovanou emailovou adresu, zašleme vám bezpečný odkaz, pomocí kterého se rovnou přihlásíte."
+            : "Zapoměli jste své heslo? Nevadí, zadejte svou registrovanou emailovou adresu, my vám zašleme instrukce k obnovení hesla."}
+        </p>
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <label className="text-sm font-medium" style={{ color: "var(--ink)" }}>
