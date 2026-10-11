@@ -174,7 +174,9 @@ export default function HomePage() {
             <p className="text-sm font-bold" style={{ color: "#fff", letterSpacing: "0.01em" }}>Kontakt</p>
             <div className="flex flex-col gap-3 text-sm" style={{ color: "#c8d8e0" }}>
               <a href="tel:+420733240842" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">+420 733 240 842</a>
-              <a href="mailto:info@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">info@dentalkeramika.cz</a>
+              <a href="mailto:info@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">✉ info@dentalkeramika.cz <span style={{ opacity: 0.6, fontSize: "0.85em" }}>obecné dotazy</span></a>
+              <a href="mailto:cad@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">✉ cad@dentalkeramika.cz <span style={{ opacity: 0.6, fontSize: "0.85em" }}>STL soubory</span></a>
+              <a href="mailto:foto@dentalkeramika.cz" style={{ color: "#c8d8e0" }} className="hover:text-white transition-colors">✉ foto@dentalkeramika.cz <span style={{ opacity: 0.6, fontSize: "0.85em" }}>foto podklady</span></a>
               <span>Hartigova 235/31<br />Praha 3 – Žižkov</span>
             </div>
           </div>
