@@ -154,7 +154,7 @@ export default function HomePage() {
               <img src="/logo.webp" alt="DentálníKeramika" style={{ height: 70, width: "auto", display: "block" }} />
             </div>
             <p className="text-sm leading-relaxed" style={{ color: "#8ca8b8", maxWidth: 280 }}>
-              Laboratoř s více než dvanácti lety zkušeností. Kompletní servis pro stomatologické ordinace od skenu po glazuru.
+              Laboratoř s více než 14 lety zkušeností. Kompletní servis pro stomatologické ordinace od skenu po glazuru.
             </p>
           </div>
 

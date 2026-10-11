@@ -6,7 +6,6 @@ import Link from "next/link";
 const NAV: ({ href: string; label: string; exact?: boolean } | null)[] = [
   { href: "/portal/dashboard", label: "Přehled", exact: true },
   { href: "/portal/rezervace", label: "Rezervace" },
-  null,
   { href: "/portal/profil", label: "Ordinace a účty" },
 ];
 
