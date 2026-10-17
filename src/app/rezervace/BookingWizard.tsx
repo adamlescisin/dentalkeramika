@@ -318,9 +318,14 @@ export default function BookingWizard({
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <p className="font-semibold text-base" style={{ color: "var(--ink)" }}>
-                        {svc.name}
-                      </p>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: "var(--cyan)", color: "#fff", letterSpacing: "0.05em" }}>
+                          {svc.code.toUpperCase()}
+                        </span>
+                        <p className="font-semibold text-base" style={{ color: "var(--ink)" }}>
+                          {svc.name}
+                        </p>
+                      </div>
                       <p className="text-sm mt-0.5" style={{ color: "#6b7f8a" }}>
                         {SERVICE_DESCRIPTIONS[svc.code] ?? ""}
                       </p>
