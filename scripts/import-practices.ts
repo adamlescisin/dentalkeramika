@@ -119,8 +119,8 @@ async function main() {
   for (const practice of practices) {
     console.log(`\n── ${practice.name} ${practice.legacy_id ? `(${practice.legacy_id})` : ""}`);
 
-    if (!practice.name || !practice.users?.length) {
-      console.error("  ✗ Missing required fields (name, users). Skipping.");
+    if (!practice.name) {
+      console.error("  ✗ Missing required field: name. Skipping.");
       errors++;
       continue;
     }
@@ -142,7 +142,7 @@ async function main() {
       practice.billing_email ?? practice.users[0].email.toLowerCase().trim();
 
     if (dryRun) {
-      console.log(`  ○ [dry-run] Would create account "${practice.name}" with ${practice.users.length} user(s) and ${practice.locations?.length ?? 0} location(s).`);
+      console.log(`  ○ [dry-run] Would create account "${practice.name}" with ${practice.users?.length ?? 0} user(s) and ${practice.locations?.length ?? 0} location(s).`);
       created++;
       continue;
     }
@@ -164,8 +164,8 @@ async function main() {
 
       console.log(`  ✓ Account created (id=${account.id})`);
 
-      // 2. Create users and link to account
-      for (const u of practice.users) {
+      // 2. Create users and link to account (skipped if none provided yet)
+      for (const u of practice.users ?? []) {
         const email = u.email.toLowerCase().trim();
 
         // Upsert user — if email already exists (shared owner across practices), reuse

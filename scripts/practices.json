@@ -1,0 +1,206 @@
+[
+  {
+    "name": "CSDC Praha s.r.o.",
+    "ico": "5774152",
+    "locations": [
+      {
+        "label": "CSDC Praha",
+        "street": "Českomoravská 2420/15a",
+        "city": "Praha 9 - Libeň",
+        "zip": "190 00"
+      }
+    ]
+  },
+  {
+    "name": "Delos dental s.r.o.",
+    "ico": "21256080",
+    "locations": [
+      {
+        "label": "Delos dental",
+        "street": "V zahradách 843/1",
+        "city": "Praha 8 - Libeň",
+        "zip": "180 00"
+      }
+    ]
+  },
+  {
+    "name": "DENT ART, s.r.o.",
+    "ico": "26754916",
+    "locations": [
+      {
+        "label": "DENT ART",
+        "street": "Mladoboleslavská 11",
+        "city": "Praha-Vinoř",
+        "zip": "190 17"
+      }
+    ]
+  },
+  {
+    "name": "Dental Modern, s.r.o.",
+    "ico": "9204288",
+    "locations": [
+      {
+        "label": "Dental Modern",
+        "street": "Kartouzská 204/6",
+        "city": "Praha 5 - Smíchov",
+        "zip": ""
+      }
+    ]
+  },
+  {
+    "name": "Dentiko Beroun",
+    "ico": "5734185",
+    "locations": [
+      {
+        "label": "Dentiko Beroun",
+        "street": "Hradební 152",
+        "city": "Beroun",
+        "zip": "266 01"
+      }
+    ]
+  },
+  {
+    "name": "Easy Dent",
+    "ico": "29263832",
+    "locations": [
+      {
+        "label": "Easy Dent",
+        "street": "Krásova 24",
+        "city": "Praha 3",
+        "zip": ""
+      }
+    ]
+  },
+  {
+    "name": "Hardent, s.r.o.",
+    "ico": "29541981",
+    "locations": [
+      {
+        "label": "Hardent",
+        "street": "Podbělohorská 69",
+        "city": "Praha 5",
+        "zip": ""
+      }
+    ]
+  },
+  {
+    "name": "IP-DENTAL s.r.o.",
+    "ico": "6569064",
+    "locations": [
+      {
+        "label": "IP-DENTAL",
+        "street": "Unhošťská 2533",
+        "city": "Kladno",
+        "zip": ""
+      }
+    ]
+  },
+  {
+    "name": "Kladný Zubař s.r.o.",
+    "ico": "7615299",
+    "locations": [
+      {
+        "label": "Kladný Zubař",
+        "street": "Ke Stadionu 1745",
+        "city": "Kladno",
+        "zip": "272 01"
+      }
+    ]
+  },
+  {
+    "name": "Lhdent Skalka s. r. o.",
+    "ico": "2912694",
+    "locations": [
+      {
+        "label": "Lhdent Skalka",
+        "street": "Nedvězská 2223/29",
+        "city": "Praha",
+        "zip": "100 00"
+      }
+    ]
+  },
+  {
+    "name": "MUDr. Iveta Melíšková",
+    "ico": "86690566",
+    "locations": [
+      {
+        "label": "MUDr. Iveta Melíšková",
+        "street": "Antonína Dvořáka 302",
+        "city": "Turnov",
+        "zip": "511 01"
+      }
+    ]
+  },
+  {
+    "name": "MUDr. Jitka Borovičková",
+    "ico": "71217291",
+    "locations": [
+      {
+        "label": "MUDr. Jitka Borovičková",
+        "street": "Přerov nad Labem 72",
+        "city": "Přerov nad Labem",
+        "zip": ""
+      }
+    ]
+  },
+  {
+    "name": "MUDr. Lenka Novotná",
+    "ico": "75090759",
+    "locations": [
+      {
+        "label": "MUDr. Lenka Novotná",
+        "street": "Příběnická 1",
+        "city": "Praha 3",
+        "zip": "130 00"
+      }
+    ]
+  },
+  {
+    "name": "MUDr. Petra Tlusťáková",
+    "ico": "3223558",
+    "locations": [
+      {
+        "label": "MUDr. Petra Tlusťáková",
+        "street": "Trnková 955",
+        "city": "Šestajovice",
+        "zip": "250 92"
+      }
+    ]
+  },
+  {
+    "name": "MUDr. Věra Rausová",
+    "ico": "1368010",
+    "locations": [
+      {
+        "label": "MUDr. Věra Rausová",
+        "street": "Pavlišovská 2283/1",
+        "city": "Praha 9",
+        "zip": ""
+      }
+    ]
+  },
+  {
+    "name": "MUDr. Veronika Škrabal Žemličková",
+    "ico": "3473490",
+    "locations": [
+      {
+        "label": "MUDr. Veronika Škrabal Žemličková",
+        "street": "Hradecká 2526/3",
+        "city": "Praha 3",
+        "zip": ""
+      }
+    ]
+  },
+  {
+    "name": "Premium MedCare s.r.o.",
+    "ico": "19869169",
+    "locations": [
+      {
+        "label": "Premium MedCare",
+        "street": "Moskevská 1464/61",
+        "city": "Praha",
+        "zip": "101 00"
+      }
+    ]
+  }
+]
