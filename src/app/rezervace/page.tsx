@@ -41,7 +41,8 @@ export default async function RezervacePage() {
     .from(dk_services)
     .where(
       and(eq(dk_services.active, true), eq(dk_services.bookable_online, true))
-    );
+    )
+    .orderBy(dk_services.code);
 
   const locations = await db
     .select({
