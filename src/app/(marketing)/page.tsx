@@ -255,8 +255,11 @@ export default function HomePage() {
 
         {/* Bottom strip */}
         <div className="border-t px-6 py-5 text-xs" style={{ borderColor: "rgba(255,255,255,.1)", color: "#5a7a8a" }}>
-          <div className="max-w-5xl mx-auto">
-            © {new Date().getFullYear()} DentálníKeramika s.r.o. Všechna práva vyhrazena.
+          <div className="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <span>© {new Date().getFullYear()} DentálníKeramika s.r.o. Všechna práva vyhrazena.</span>
+            <Link href="/podminky-sluzby" className="hover:text-white transition-colors" style={{ color: "#8ca8b8" }}>
+              Podmínky služby
+            </Link>
           </div>
         </div>
       </footer>
