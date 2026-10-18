@@ -32,14 +32,82 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero */}
+      {/* Complete service */}
       <section className="max-w-5xl mx-auto px-6 pt-16 pb-12">
         <h1
+          className="text-4xl md:text-5xl font-bold mb-4 text-center"
+          style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112", letterSpacing: "-0.025em" }}
+        >
+          Kompletní servis pro stomatologie
+        </h1>
+        <p className="text-lg mb-12 max-w-2xl mx-auto text-center" style={{ color: "#4a5f6a" }}>
+          Vyhotovení nebo příjem a zpracování intraorálního skenu, CAD/CAM design, vizualizace,
+          implantační šablony, návrh a plánování protetiky, vlastní výroba, výběr barvy a glazura,
+          osobní přístup.
+        </p>
+        <div className="grid md:grid-cols-2 gap-6">
+          {[
+            {
+              img: "/sluzby/intraoralni-skenovani.jpg",
+              title: "Intraorální skenování",
+              text: "Intraorální skenování v zubních ordinacích skenerem Trios (3Shape). Obsluha softwaru, kontrola preparace, disparalelity, místa do skusu, fotografie, výběr barvy a odeslání dat.",
+              cover: false,
+            },
+            {
+              img: "/sluzby/frezovani.jpg",
+              title: "Frézování konstrukcí",
+              text: "Frézování zirkonových konstrukcí na přístrojích VHF. Materiál nejvyšší kvality Katana.",
+              cover: false,
+            },
+            {
+              img: "/sluzby/zirkonove-konstrukce.jpg",
+              title: "Zirkonové konstrukce",
+              text: "Vrstvené zirkonové konstrukce keramikou HeraCeram Zirkonia (Kulzer). Individualizace a glazura s pacientem.",
+              cover: true,
+            },
+            {
+              img: "/sluzby/implantacni-sablony.jpg",
+              title: "Implantační šablony",
+              text: "Pro ozubené i bezzubé čelisti v pilotním i plně navigovaném provedení. Na základě podkladů z ordinace připravíme návrh implantace, po schválení či korekci vytiskneme šablonu a osadíme vodícími sleevy. Konzultace ohledně implantačních šablon možná e-mailem, telefonicky i osobně.",
+              cover: true,
+            },
+          ].map((s) => (
+            <div
+              key={s.title}
+              className="rounded-xl overflow-hidden flex flex-col"
+              style={{ background: "#fff", border: "1px solid var(--line)" }}
+            >
+              <div className="h-56 shrink-0" style={{ background: s.cover ? "#040309" : "#fff" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={s.img}
+                  alt={s.title}
+                  loading="lazy"
+                  className={`w-full h-full object-contain ${s.cover ? "" : "p-5"}`}
+                />
+              </div>
+              <div className="px-6 py-5 flex flex-col gap-2">
+                <h2
+                  className="text-xl font-bold"
+                  style={{ color: "var(--cyan-deep)", fontVariationSettings: "'wdth' 112" }}
+                >
+                  {s.title}
+                </h2>
+                <p className="text-sm" style={{ color: "#4a5f6a", lineHeight: 1.7 }}>{s.text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Hero */}
+      <section className="max-w-5xl mx-auto px-6 pt-16 pb-12">
+        <h2
           className="text-4xl md:text-5xl font-bold mb-4"
           style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112", letterSpacing: "-0.025em" }}
         >
           Intraorální sken<br />přímo ve vaší ordinaci
-        </h1>
+        </h2>
         <p className="text-lg mb-8 max-w-xl" style={{ color: "#4a5f6a" }}>
           Objednejte technika online. Přijede k vám, naskenuje, odjede — vy
           se staráte o pacienta, my o keramiku.
