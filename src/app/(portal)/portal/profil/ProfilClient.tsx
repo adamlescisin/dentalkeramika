@@ -160,7 +160,7 @@ function BillingSection({ account, isOwner }: { account: Account; isOwner: boole
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border divide-y overflow-hidden" style={{ borderColor: "var(--line)" }}>
+        <div className="bg-white rounded-xl border overflow-hidden" style={{ borderColor: "var(--line)" }}>
           {rows.map(([label, value]) => (
             <div key={label} className="flex gap-4 px-5 py-3">
               <span className="text-sm w-40 shrink-0 font-medium" style={{ color: "#6b7f8a" }}>{label}</span>
@@ -502,7 +502,7 @@ function TeamSection({ initialTeam, isOwner }: { initialTeam: TeamMember[]; isOw
         </div>
       )}
 
-      <div className="bg-white rounded-xl border divide-y overflow-hidden" style={{ borderColor: "var(--line)" }}>
+      <div className="bg-white rounded-xl border overflow-hidden" style={{ borderColor: "var(--line)" }}>
         {team.map((m) => (
           <div key={m.id} className="flex items-center justify-between px-5 py-3 gap-3">
             <div>

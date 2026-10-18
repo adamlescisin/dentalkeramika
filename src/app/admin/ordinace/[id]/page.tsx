@@ -454,7 +454,7 @@ export default function OrdinaceDetailPage() {
               {members.length === 0 ? (
                 <div className="bg-white rounded-xl border p-5 text-center text-sm" style={{ borderColor: "var(--line)", color: "#6b7f8a" }}>Žádní uživatelé.</div>
               ) : (
-                <div className="bg-white rounded-xl border divide-y overflow-hidden" style={{ borderColor: "var(--line)" }}>
+                <div className="bg-white rounded-xl border overflow-hidden" style={{ borderColor: "var(--line)" }}>
                   {members.map((m) => (
                     <div key={m.membership_id} className="px-5 py-4 flex flex-col gap-3">
                       {editingMember === m.membership_id ? (
