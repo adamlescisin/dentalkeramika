@@ -37,7 +37,7 @@ export async function GET(
 ) {
   const { action } = await params;
   if (action !== "verify") {
-    return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+    return NextResponse.json({ error: "Tato metoda není podporována." }, { status: 405 });
   }
 
   const { searchParams } = req.nextUrl;
@@ -111,7 +111,7 @@ export async function POST(
     case "logout":
       return handleLogout(req);
     default:
-      return NextResponse.json({ error: "Unknown auth action" }, { status: 404 });
+      return NextResponse.json({ error: "Neznámá akce." }, { status: 404 });
   }
 }
 
@@ -260,7 +260,7 @@ async function handleVerify(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  return NextResponse.json({ error: "Unknown verification type" }, { status: 400 });
+  return NextResponse.json({ error: "Neplatný typ ověřovacího odkazu." }, { status: 400 });
 }
 
 // ─── Password reset request ───────────────────────────────────────────────────

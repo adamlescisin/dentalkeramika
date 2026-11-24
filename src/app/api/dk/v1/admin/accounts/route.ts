@@ -9,7 +9,7 @@ import { sendAdminOnboardingInvite } from "../../../../../../lib/email";
 export const dynamic = "force-dynamic";
 
 export async function GET(_req: NextRequest) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const rows = await db.select().from(dk_accounts).orderBy(asc(dk_accounts.created_at));
   return NextResponse.json({ data: rows });
@@ -17,7 +17,7 @@ export async function GET(_req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = await getAdminSession();
-  if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const body = await req.json().catch(() => ({})) as Record<string, string>;
   const { firstName, lastName, email, phone, practiceName, ico, dic, billingEmail, billingAddress } = body;

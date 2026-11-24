@@ -61,11 +61,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSessionFromCookies();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
 
   const { id } = await params;
   const result = await getReservationForUser(id, session.userId);
-  if (!result) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!result) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
 
   return NextResponse.json({ data: result.reservation });
 }
@@ -77,21 +77,21 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSessionFromCookies();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
 
   const { id } = await params;
   const result = await getReservationForUser(id, session.userId);
-  if (!result) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!result) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
 
   const { reservation, role } = result;
 
   if (role === "viewer") {
-    return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+    return NextResponse.json({ error: "Vaše role v ordinaci tuto akci neumožňuje." }, { status: 403 });
   }
 
   if (!["pending", "confirmed", "rescheduled"].includes(reservation.status)) {
     return NextResponse.json(
-      { error: "Reservation cannot be rescheduled in its current state" },
+      { error: "Rezervaci v jejím současném stavu nelze přeložit." },
       { status: 409 }
     );
   }
@@ -106,14 +106,14 @@ export async function PATCH(
 
   if (new Date() > cutoff) {
     return NextResponse.json(
-      { error: "Inside cut-off window — please call us to reschedule" },
+      { error: `Termín je příliš blízko — přeložení je možné už jen telefonicky. Zavolejte nám prosím${rules?.contact_phone ? ` na ${rules.contact_phone}` : ""}.` },
       { status: 409 }
     );
   }
 
   if ((reservation.reschedule_count ?? 0) >= maxReschedules) {
     return NextResponse.json(
-      { error: "Self-service reschedule limit reached" },
+      { error: "Rezervaci jste již přeložili maximálně povolený počet krát. Pro další změnu nás prosím kontaktujte." },
       { status: 409 }
     );
   }
@@ -122,12 +122,12 @@ export async function PATCH(
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ error: "Neplatný požadavek." }, { status: 400 });
   }
 
   const newStart = new Date(body.starts_at);
   if (isNaN(newStart.getTime())) {
-    return NextResponse.json({ error: "Invalid starts_at" }, { status: 400 });
+    return NextResponse.json({ error: "Neplatný termín." }, { status: 400 });
   }
 
   const [service] = await db
@@ -136,7 +136,7 @@ export async function PATCH(
     .where(eq(dk_services.id, reservation.service_id))
     .limit(1);
 
-  if (!service) return NextResponse.json({ error: "Service not found" }, { status: 500 });
+  if (!service) return NextResponse.json({ error: "Služba nebyla nalezena." }, { status: 500 });
 
   const newEnd = new Date(newStart.getTime() + service.duration_min * 60000);
   const newBlocksFrom = new Date(
@@ -167,7 +167,7 @@ export async function PATCH(
     const msg = err instanceof Error ? err.message : "";
     if (msg.includes("dk_reservations_no_overlap")) {
       return NextResponse.json(
-        { error: "Slot no longer available" },
+        { error: "Vybraný termín už mezitím někdo obsadil. Zvolte prosím jiný." },
         { status: 409 }
       );
     }
@@ -175,7 +175,7 @@ export async function PATCH(
   }
 
   if (updated.length === 0) {
-    return NextResponse.json({ error: "Reservation not found" }, { status: 404 });
+    return NextResponse.json({ error: "Rezervace nebyla nalezena." }, { status: 404 });
   }
 
   await db.insert(dk_reservation_events).values({
@@ -228,21 +228,21 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSessionFromCookies();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
 
   const { id } = await params;
   const result = await getReservationForUser(id, session.userId);
-  if (!result) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!result) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
 
   const { reservation, role } = result;
 
   if (role === "viewer") {
-    return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+    return NextResponse.json({ error: "Vaše role v ordinaci tuto akci neumožňuje." }, { status: 403 });
   }
 
   if (!["pending", "confirmed", "rescheduled"].includes(reservation.status)) {
     return NextResponse.json(
-      { error: "Reservation cannot be cancelled in its current state" },
+      { error: "Rezervaci v jejím současném stavu nelze zrušit." },
       { status: 409 }
     );
   }
@@ -255,7 +255,7 @@ export async function DELETE(
 
   if (new Date() > cutoff) {
     return NextResponse.json(
-      { error: "Inside cut-off window — please call us to cancel" },
+      { error: `Termín je příliš blízko — zrušení je možné už jen telefonicky. Zavolejte nám prosím${rules?.contact_phone ? ` na ${rules.contact_phone}` : ""}.` },
       { status: 409 }
     );
   }

@@ -27,7 +27,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   const session = await getSessionFromCookies();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
   }
 
   const { searchParams } = req.nextUrl;
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const session = await getSessionFromCookies();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
   }
 
   const idempotencyKey = req.headers.get("Idempotency-Key");
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return NextResponse.json({ error: "Neplatný požadavek." }, { status: 400 });
   }
 
   const { serviceId, locationId, startsAt, requesterName, requesterPhone } =
@@ -115,14 +115,14 @@ export async function POST(req: NextRequest) {
 
   if (!serviceId || !locationId || !startsAt || !requesterName || !requesterPhone) {
     return NextResponse.json(
-      { error: "Missing required fields" },
+      { error: "Vyplňte všechna povinná pole." },
       { status: 400 }
     );
   }
 
   const start = new Date(startsAt);
   if (isNaN(start.getTime())) {
-    return NextResponse.json({ error: "Invalid startsAt" }, { status: 400 });
+    return NextResponse.json({ error: "Neplatný termín." }, { status: 400 });
   }
 
   // Validate the account is active
@@ -143,12 +143,12 @@ export async function POST(req: NextRequest) {
     .limit(1);
 
   if (!membership) {
-    return NextResponse.json({ error: "No active account" }, { status: 403 });
+    return NextResponse.json({ error: "Nemáte aktivní účet ordinace." }, { status: 403 });
   }
 
   if (membership.account_status !== "active") {
     return NextResponse.json(
-      { error: "Account pending approval — reservations not yet available" },
+      { error: "Účet čeká na schválení — rezervace zatím nejsou k dispozici." },
       { status: 403 }
     );
   }
@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
     .limit(1);
 
   if (!service || !service.bookable_online) {
-    return NextResponse.json({ error: "Service not available" }, { status: 404 });
+    return NextResponse.json({ error: "Služba není k dispozici." }, { status: 404 });
   }
 
   // Validate location belongs to this account
@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
     .limit(1);
 
   if (!location) {
-    return NextResponse.json({ error: "Location not found" }, { status: 404 });
+    return NextResponse.json({ error: "Adresa nebyla nalezena." }, { status: 404 });
   }
 
   // Lead time check
@@ -189,7 +189,7 @@ export async function POST(req: NextRequest) {
 
   if (start < leadCutoff) {
     return NextResponse.json(
-      { error: "Slot is inside the lead-time window" },
+      { error: "Tento termín je příliš brzy — vyberte prosím pozdější." },
       { status: 409 }
     );
   }
@@ -208,7 +208,7 @@ export async function POST(req: NextRequest) {
 
   if (!technician) {
     return NextResponse.json(
-      { error: "No technicians available" },
+      { error: "Momentálně není k dispozici žádný technik. Kontaktujte nás prosím telefonicky." },
       { status: 503 }
     );
   }
@@ -252,7 +252,7 @@ export async function POST(req: NextRequest) {
     const msg = err instanceof Error ? err.message : "";
     if (msg.includes("dk_reservations_no_overlap")) {
       return NextResponse.json(
-        { error: "Slot no longer available" },
+        { error: "Vybraný termín už mezitím někdo obsadil. Zvolte prosím jiný." },
         { status: 409 }
       );
     }

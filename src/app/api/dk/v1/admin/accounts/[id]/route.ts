@@ -11,7 +11,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getAdminSession();
-  if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const { id } = await params;
   const body = await req.json().catch(() => ({})) as Record<string, string>;
@@ -44,7 +44,7 @@ export async function PATCH(
   }
 
   const [updated] = await db.update(dk_accounts).set(patch).where(eq(dk_accounts.id, id)).returning();
-  if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!updated) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
   return NextResponse.json({ data: updated });
 }
 
@@ -52,11 +52,11 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
   const { id } = await params;
 
   const [account] = await db.select({ id: dk_accounts.id }).from(dk_accounts).where(eq(dk_accounts.id, id)).limit(1);
-  if (!account) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!account) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
 
   // Block deletion if there are non-cancelled reservations
   const [active] = await db.select({ id: dk_reservations.id })

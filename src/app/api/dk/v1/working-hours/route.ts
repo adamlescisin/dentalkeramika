@@ -7,7 +7,7 @@ import { getAdminSession } from "../../../../../lib/admin-auth";
 export const dynamic = "force-dynamic";
 
 export async function GET(_req: NextRequest) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const technicians = await db.select().from(dk_technicians).where(eq(dk_technicians.active, true));
   const hours = await db.select().from(dk_working_hours);
@@ -15,13 +15,13 @@ export async function GET(_req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   type DayRow = { weekday: number; is_open: boolean; opens_at: string | null; closes_at: string | null };
   const { technicianId, days }: { technicianId: string; days: DayRow[] } = await req.json();
 
   if (!technicianId || !Array.isArray(days) || days.length !== 7) {
-    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    return NextResponse.json({ error: "Neplatná data." }, { status: 400 });
   }
 
   const [tech] = await db
@@ -30,7 +30,7 @@ export async function PUT(req: NextRequest) {
     .where(and(eq(dk_technicians.id, technicianId), eq(dk_technicians.active, true)))
     .limit(1);
 
-  if (!tech) return NextResponse.json({ error: "Technician not found" }, { status: 404 });
+  if (!tech) return NextResponse.json({ error: "Technik nebyl nalezen." }, { status: 404 });
 
   await db.delete(dk_working_hours).where(eq(dk_working_hours.technician_id, technicianId));
 

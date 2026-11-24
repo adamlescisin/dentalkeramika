@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 
   const technicianId = req.nextUrl.searchParams.get("technician_id");
   if (!technicianId) {
-    return NextResponse.json({ error: "technician_id required" }, { status: 400 });
+    return NextResponse.json({ error: "Chybí identifikace technika." }, { status: 400 });
   }
 
   await db.delete(dk_oauth_tokens).where(eq(dk_oauth_tokens.technician_id, technicianId));

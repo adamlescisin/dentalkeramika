@@ -11,7 +11,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getAdminSession();
-  if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
@@ -21,12 +21,12 @@ export async function PATCH(
   for (const key of allowed) {
     if (key in body) (patch as Record<string, unknown>)[key] = body[key];
   }
-  if (Object.keys(patch).length === 0) return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+  if (Object.keys(patch).length === 0) return NextResponse.json({ error: "Nebyly zadány žádné změny." }, { status: 400 });
 
   patch.updated_by = session.userId;
   patch.updated_at = new Date();
 
   const [updated] = await db.update(dk_services).set(patch).where(eq(dk_services.id, id)).returning();
-  if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!updated) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
   return NextResponse.json({ data: updated });
 }

@@ -17,7 +17,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!await getAdminSession()) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
   }
 
   const { id } = await params;
@@ -29,7 +29,7 @@ export async function GET(
     .limit(1);
 
   if (!account) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
   }
 
   const rows = await db

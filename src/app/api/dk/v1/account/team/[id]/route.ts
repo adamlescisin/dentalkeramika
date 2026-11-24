@@ -11,7 +11,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSessionFromCookies();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
 
   const [callerMembership] = await db
     .select()
@@ -20,7 +20,7 @@ export async function DELETE(
     .limit(1);
 
   if (!callerMembership || callerMembership.role !== "owner") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
   }
 
   const { id } = await params;
@@ -31,7 +31,7 @@ export async function DELETE(
     .where(and(eq(dk_account_users.id, id), eq(dk_account_users.account_id, callerMembership.account_id)))
     .limit(1);
 
-  if (!target) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!target) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
   if (target.user_id === session.userId) {
     return NextResponse.json({ error: "Nemůžete odebrat sami sebe." }, { status: 400 });
   }

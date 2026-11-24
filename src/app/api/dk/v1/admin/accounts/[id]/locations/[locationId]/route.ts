@@ -10,7 +10,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; locationId: string }> }
 ) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
   const { id: accountId, locationId } = await params;
   const body = await req.json().catch(() => ({})) as Record<string, string>;
   const { label, street, city, zip, access_note, contact_name, contact_phone } = body;
@@ -45,7 +45,7 @@ export async function PATCH(
     .where(and(eq(dk_locations.id, locationId), eq(dk_locations.account_id, accountId)))
     .returning();
 
-  if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!updated) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
   return NextResponse.json({ data: updated });
 }
 
@@ -53,7 +53,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string; locationId: string }> }
 ) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
   const { id: accountId, locationId } = await params;
 
   const [loc] = await db.select({ id: dk_locations.id })
@@ -61,7 +61,7 @@ export async function DELETE(
     .where(and(eq(dk_locations.id, locationId), eq(dk_locations.account_id, accountId)))
     .limit(1);
 
-  if (!loc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!loc) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
 
   const [activeRes] = await db.select({ id: dk_reservations.id })
     .from(dk_reservations)

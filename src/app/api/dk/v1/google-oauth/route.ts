@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   const technicianId = req.nextUrl.searchParams.get("technician_id");
   if (!technicianId) {
-    return NextResponse.json({ error: "technician_id required" }, { status: 400 });
+    return NextResponse.json({ error: "Chybí identifikace technika." }, { status: 400 });
   }
 
   const authUrl = getAuthorizationUrl(technicianId);

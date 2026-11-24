@@ -10,7 +10,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
   const { id } = await params;
 
   const rows = await db.select().from(dk_locations)
@@ -24,7 +24,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
   const { id: accountId } = await params;
   const body = await req.json().catch(() => ({})) as Record<string, string>;
   const { label, street, city, zip, access_note, contact_name, contact_phone } = body;

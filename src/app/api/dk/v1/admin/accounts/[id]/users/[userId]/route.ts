@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 type Params = { params: Promise<{ id: string; userId: string }> };
 
 export async function PATCH(req: NextRequest, { params }: Params) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
   const { id: accountId, userId } = await params;
   const body = await req.json().catch(() => ({})) as Record<string, string>;
 
@@ -18,7 +18,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     .where(and(eq(dk_account_users.account_id, accountId), eq(dk_account_users.user_id, userId)))
     .limit(1);
 
-  if (!membership) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!membership) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
 
   // Update role
   if (body.role !== undefined) {
@@ -61,7 +61,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
   const { id: accountId, userId } = await params;
 
   const [membership] = await db.select()
@@ -69,7 +69,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     .where(and(eq(dk_account_users.account_id, accountId), eq(dk_account_users.user_id, userId)))
     .limit(1);
 
-  if (!membership) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!membership) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
 
   // Count owners — cannot remove the last owner
   if (membership.role === "owner") {

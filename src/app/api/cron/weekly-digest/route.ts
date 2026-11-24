@@ -50,7 +50,7 @@ function pragueMidnight(year: number, month: number, day: number): Date {
 
 export async function GET(req: NextRequest) {
   if (CRON_SECRET && req.headers.get("Authorization") !== `Bearer ${CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
   }
 
   const now = new Date();

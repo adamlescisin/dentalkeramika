@@ -20,16 +20,16 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSessionFromCookies();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
 
   const m = await getOwnerAccount(session.userId);
-  if (!m || m.role !== "owner") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!m || m.role !== "owner") return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const { id } = await params;
   const [loc] = await db.select().from(dk_locations).where(
     and(eq(dk_locations.id, id), eq(dk_locations.account_id, m.accountId))
   ).limit(1);
-  if (!loc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!loc) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
 
   const body = await req.json().catch(() => ({}));
   const allowed = ["label", "street", "city", "zip", "access_note", "contact_name", "contact_phone"] as const;
@@ -38,7 +38,7 @@ export async function PATCH(
     if (key in body) (patch as Record<string, unknown>)[key] = body[key];
   }
 
-  if (Object.keys(patch).length === 0) return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+  if (Object.keys(patch).length === 0) return NextResponse.json({ error: "Nebyly zadány žádné změny." }, { status: 400 });
 
   await db.update(dk_locations).set(patch).where(eq(dk_locations.id, id));
   const [updated] = await db.select().from(dk_locations).where(eq(dk_locations.id, id)).limit(1);
@@ -50,16 +50,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getSessionFromCookies();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
 
   const m = await getOwnerAccount(session.userId);
-  if (!m || m.role !== "owner") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!m || m.role !== "owner") return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const { id } = await params;
   const [loc] = await db.select().from(dk_locations).where(
     and(eq(dk_locations.id, id), eq(dk_locations.account_id, m.accountId))
   ).limit(1);
-  if (!loc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!loc) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
 
   await db.delete(dk_locations).where(eq(dk_locations.id, id));
   return NextResponse.json({ ok: true });

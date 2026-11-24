@@ -7,14 +7,14 @@ import { getAdminSession } from "../../../../../../lib/admin-auth";
 export const dynamic = "force-dynamic";
 
 export async function GET(_req: NextRequest) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const [row] = await db.select().from(dk_booking_rules).where(eq(dk_booking_rules.id, 1)).limit(1);
   return NextResponse.json({ data: row ?? null });
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
   const allowed = ["slot_step_min", "lead_time_hours", "buffers_inside_working_hours",
@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest) {
   for (const key of allowed) {
     if (key in body) (patch as Record<string, unknown>)[key] = body[key];
   }
-  if (Object.keys(patch).length === 0) return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+  if (Object.keys(patch).length === 0) return NextResponse.json({ error: "Nebyly zadány žádné změny." }, { status: 400 });
 
   // Upsert the single row (id=1)
   await db

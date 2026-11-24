@@ -12,7 +12,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
   const { id } = await params;
 
   const rows = await db
@@ -40,7 +40,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getAdminSession();
-  if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
   const { id: accountId } = await params;
 
   const body = await req.json().catch(() => ({})) as Record<string, string>;

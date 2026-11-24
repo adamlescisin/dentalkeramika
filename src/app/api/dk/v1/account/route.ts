@@ -23,21 +23,21 @@ async function getMembership(userId: string) {
 
 export async function GET(_req: NextRequest) {
   const session = await getSessionFromCookies();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
 
   const m = await getMembership(session.userId);
-  if (!m) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!m) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
 
   return NextResponse.json({ data: m.account, role: m.role });
 }
 
 export async function PATCH(req: NextRequest) {
   const session = await getSessionFromCookies();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
 
   const m = await getMembership(session.userId);
-  if (!m) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (m.role !== "owner") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!m) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
+  if (m.role !== "owner") return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
   const allowed = ["name", "ico", "dic", "billing_email", "billing_address"] as const;
@@ -47,7 +47,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   if (Object.keys(patch).length === 0) {
-    return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+    return NextResponse.json({ error: "Nebyly zadány žádné změny." }, { status: 400 });
   }
 
   await db.update(dk_accounts).set(patch).where(eq(dk_accounts.id, m.account.id));

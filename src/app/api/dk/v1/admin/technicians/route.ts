@@ -7,7 +7,7 @@ import { getAdminSession } from "../../../../../../lib/admin-auth";
 export const dynamic = "force-dynamic";
 
 export async function GET(_req: NextRequest) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const rows = await db.select().from(dk_technicians).orderBy(asc(dk_technicians.display_name));
   const tokenRows = await db.select({ technician_id: dk_oauth_tokens.technician_id }).from(dk_oauth_tokens);
@@ -19,7 +19,7 @@ export async function GET(_req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const { display_name, active = true } = await req.json().catch(() => ({}));
   if (!display_name?.trim()) return NextResponse.json({ error: "display_name je povinný." }, { status: 400 });

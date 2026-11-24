@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: NextRequest) {
   const session = await getSessionFromCookies();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
   }
 
   const { searchParams } = req.nextUrl;
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
   if (!serviceId || !locationId || !fromParam || !toParam) {
     return NextResponse.json(
-      { error: "Missing required params: service, location, from, to" },
+      { error: "Chybí povinné údaje (služba, adresa nebo období)." },
       { status: 400 }
     );
   }
@@ -32,14 +32,14 @@ export async function GET(req: NextRequest) {
   const to = new Date(toParam);
 
   if (isNaN(from.getTime()) || isNaN(to.getTime())) {
-    return NextResponse.json({ error: "Invalid date range" }, { status: 400 });
+    return NextResponse.json({ error: "Neplatný rozsah dat." }, { status: 400 });
   }
 
   // Horizon guard
   const maxHorizon = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
   if (to > maxHorizon) {
     return NextResponse.json(
-      { error: "Requested window exceeds 90-day horizon" },
+      { error: "Termíny lze vyhledávat nejvýše 90 dní dopředu." },
       { status: 400 }
     );
   }
@@ -51,12 +51,12 @@ export async function GET(req: NextRequest) {
     .limit(1);
 
   if (!service) {
-    return NextResponse.json({ error: "Service not found" }, { status: 404 });
+    return NextResponse.json({ error: "Služba nebyla nalezena." }, { status: 404 });
   }
 
   if (!service.bookable_online) {
     return NextResponse.json(
-      { error: "Service not bookable online" },
+      { error: "Tuto službu nelze rezervovat online. Kontaktujte nás prosím telefonicky." },
       { status: 400 }
     );
   }
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
       .limit(1);
     if (!tech) {
       return NextResponse.json(
-        { error: "Technician not found" },
+        { error: "Technik nebyl nalezen." },
         { status: 404 }
       );
     }
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
       .limit(1);
     if (!tech) {
       return NextResponse.json(
-        { error: "No technicians available" },
+        { error: "Momentálně není k dispozici žádný technik. Kontaktujte nás prosím telefonicky." },
         { status: 503 }
       );
     }

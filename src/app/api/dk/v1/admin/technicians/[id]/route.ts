@@ -10,7 +10,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
@@ -26,10 +26,10 @@ export async function PATCH(
     }
     patch.email = email || null;
   }
-  if (Object.keys(patch).length === 0) return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
+  if (Object.keys(patch).length === 0) return NextResponse.json({ error: "Nebyly zadány žádné změny." }, { status: 400 });
 
   const [updated] = await db.update(dk_technicians).set(patch).where(eq(dk_technicians.id, id)).returning();
-  if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!updated) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
   return NextResponse.json({ data: updated });
 }
 
@@ -37,7 +37,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!await getAdminSession()) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!await getAdminSession()) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const { id } = await params;
   await db.update(dk_technicians).set({ active: false }).where(eq(dk_technicians.id, id));

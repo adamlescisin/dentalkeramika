@@ -17,10 +17,10 @@ async function getOwnerAccount(userId: string) {
 
 export async function GET(_req: NextRequest) {
   const session = await getSessionFromCookies();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
 
   const m = await getOwnerAccount(session.userId);
-  if (!m) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!m) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
 
   const locations = await db
     .select()
@@ -33,11 +33,11 @@ export async function GET(_req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const session = await getSessionFromCookies();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
 
   const m = await getOwnerAccount(session.userId);
-  if (!m) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (m.role !== "owner") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!m) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
+  if (m.role !== "owner") return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
   const { label, street, city, zip, access_note, contact_name, contact_phone } = body;

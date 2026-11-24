@@ -12,11 +12,11 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getAdminSession();
-  if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!session) return NextResponse.json({ error: "K této akci nemáte oprávnění." }, { status: 403 });
 
   const { id } = await params;
   const [row] = await db.select().from(dk_reservations).where(eq(dk_reservations.id, id)).limit(1);
-  if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!row) return NextResponse.json({ error: "Záznam nebyl nalezen." }, { status: 404 });
   if (row.status !== "pending") {
     return NextResponse.json({ error: "Rezervace není ve stavu čekající na potvrzení." }, { status: 409 });
   }
