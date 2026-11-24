@@ -9,6 +9,7 @@ type Rules = {
   reschedule_cutoff_hours: number;
   max_self_reschedules: number;
   horizon_days: number;
+  gcal_overrun_buffer_min: number;
   buffers_inside_working_hours: boolean;
   contact_phone: string | null;
   support_email: string | null;
@@ -20,6 +21,7 @@ const BOOKING_FIELDS: { key: keyof Rules; label: string; desc: string; type: "nu
   { key: "reschedule_cutoff_hours",      label: "Uzávěrka přesunu",       desc: "Do kolika hodin před termínem lze přesunout.", type: "number",  unit: "h"   },
   { key: "max_self_reschedules",         label: "Max. přesuny klientem",  desc: "Kolikrát smí klient přesunout jednu rezervaci.", type: "number"        },
   { key: "horizon_days",                 label: "Horizont nabídky",       desc: "Kolik dní dopředu se zobrazují sloty.",         type: "number",  unit: "dní" },
+  { key: "gcal_overrun_buffer_min",      label: "Rezerva po obsazení v Google kalendáři", desc: "Volný čas na přesah/odjezd po každém bloku obsazeném v Google kalendáři.", type: "number", unit: "min" },
   { key: "buffers_inside_working_hours", label: "Buffery uvnitř směny",   desc: "Buffer před/po termínu musí být v pracovní době.", type: "boolean"      },
 ];
 

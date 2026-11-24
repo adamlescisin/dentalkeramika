@@ -241,6 +241,7 @@ export const dk_technicians = pgTable("dk_technicians", {
   user_id: uuid("user_id").references(() => dk_users.id),
   display_name: varchar("display_name", { length: 120 }).notNull(),
   google_calendar_id: varchar("google_calendar_id", { length: 255 }),
+  email: varchar("email", { length: 254 }),
   home_base_lat: doublePrecision("home_base_lat"),
   home_base_lng: doublePrecision("home_base_lng"),
   active: boolean("active").notNull().default(true),
@@ -297,6 +298,7 @@ export const dk_booking_rules = pgTable("dk_booking_rules", {
     .default(24),
   max_self_reschedules: integer("max_self_reschedules").notNull().default(2),
   horizon_days: integer("horizon_days").notNull().default(90),
+  gcal_overrun_buffer_min: integer("gcal_overrun_buffer_min").notNull().default(30),
   contact_phone: varchar("contact_phone", { length: 30 }),
   support_email: varchar("support_email", { length: 254 }),
 });

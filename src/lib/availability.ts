@@ -54,10 +54,12 @@ export async function getAvailability(params: {
     slot_step_min: stepMin,
     lead_time_hours: leadHours,
     buffers_inside_working_hours: buffersInside,
+    gcal_overrun_buffer_min: overrunMin,
   } = rules ?? {
     slot_step_min: 30,
     lead_time_hours: 24,
     buffers_inside_working_hours: true,
+    gcal_overrun_buffer_min: 30,
   };
 
   const now = new Date();
@@ -185,7 +187,14 @@ export async function getAvailability(params: {
     }
 
     for (const g of googleBusy) {
-      busy.push([new Date(g.start), new Date(g.end)]);
+      const gStart = new Date(g.start);
+      const gEnd = new Date(g.end);
+      // Portal reservations are mirrored to GCal; their DB footprint already carries
+      // the service buffers, so the overrun gap only applies to foreign blocks.
+      const isPortalEvent = existingReservations.some(
+        (r) => new Date(r.blocks_from) <= gStart && gEnd <= new Date(r.blocks_to)
+      );
+      busy.push([gStart, isPortalEvent ? gEnd : new Date(gEnd.getTime() + overrunMin * 60000)]);
     }
 
     // Parse open/close as UTC by combining with the date string
