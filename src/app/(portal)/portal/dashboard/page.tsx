@@ -41,6 +41,8 @@ function upcomingCountLabel(n: number): string {
   return `${n} nadcházejících termínů`;
 }
 
+export const metadata = { title: "Nástěnka" };
+
 export default async function DashboardPage() {
   const session = await getSessionFromCookies();
   if (!session) redirect("/prihlasit");

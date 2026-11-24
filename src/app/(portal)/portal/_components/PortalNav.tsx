@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 const NAV: ({ href: string; label: string; exact?: boolean } | null)[] = [
-  { href: "/portal/dashboard", label: "Přehled", exact: true },
+  { href: "/portal/dashboard", label: "Nástěnka", exact: true },
   { href: "/portal/rezervace", label: "Rezervace" },
   { href: "/portal/profil", label: "Ordinace a účty" },
 ];
