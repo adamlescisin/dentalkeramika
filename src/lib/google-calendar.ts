@@ -250,6 +250,27 @@ export async function deleteCalendarEvent(
   await cal.events.delete({ calendarId, eventId, sendUpdates: "none" });
 }
 
+/**
+ * Reads a single event by id. Returns null when Google reports it as gone
+ * (404/410). A deleted-but-retained event comes back with status "cancelled".
+ */
+export async function getCalendarEvent(
+  calendarId: string,
+  eventId: string,
+  technicianId: string
+): Promise<calendar_v3.Schema$Event | null> {
+  const auth = await getAuthClientForTechnician(technicianId);
+  const cal = getCalendar(auth);
+  try {
+    const res = await cal.events.get({ calendarId, eventId });
+    return res.data;
+  } catch (err: unknown) {
+    const code = (err as { code?: number }).code;
+    if (code === 404 || code === 410) return null;
+    throw err;
+  }
+}
+
 // Adopt an existing Bookly event by stamping our extended properties onto it.
 // Leaves summary, time and attendees untouched; sendUpdates=none.
 export async function adoptCalendarEvent(
