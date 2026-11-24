@@ -14,6 +14,7 @@ const SECTIONS = [
   { href: "/admin/pracovni-doba",label: "Pracovní doba",       desc: "Dostupné hodiny každého technika" },
   { href: "/admin/sluzby",       label: "Služby",              desc: "CRUD ceníku, délky a příznaků" },
   { href: "/admin/ordinace",     label: "Ordinace",            desc: "Schvalování a správa klientských účtů" },
+  { href: "/admin/vsechny-rezervace", label: "Všechny rezervace", desc: "Seznam všech rezervací s filtry" },
   { href: "/admin/rezervace",    label: "Čekající rezervace",  desc: "Potvrzení nebo odmítnutí rezervací" },
   { href: "/admin/nastaveni",    label: "Nastavení",           desc: "Globální pravidla rezervačního systému" },
 ];
@@ -22,25 +23,41 @@ export default async function AdminPage() {
   const session = await getAdminSession();
   if (!session) redirect("/admin/prihlasit");
 
+  // "Další týden" = 7 Prague calendar days starting today, matching the linked filter.
   const now = new Date();
-  const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const pragueDate = (d: Date) => d.toLocaleDateString("sv-SE", { timeZone: "Europe/Prague" });
+  const pragueMidnight = (dateStr: string) => {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const utc = new Date(Date.UTC(y, m - 1, d));
+    const h = Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Prague", hour: "2-digit", hour12: false }).format(utc)) % 24;
+    return new Date(utc.getTime() - h * 3600_000);
+  };
+  const today = pragueDate(now);
+  const shiftDay = (dateStr: string, n: number) => {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+  };
+  const weekFrom = pragueMidnight(today);
+  const weekTo = pragueMidnight(shiftDay(today, 7));
 
   const [[{ total: practiceCount }], [{ total: reservationCount }], [{ total: nextWeekCount }]] = await Promise.all([
     db.select({ total: count() }).from(dk_accounts),
     db.select({ total: count() }).from(dk_reservations).where(ne(dk_reservations.status, "cancelled")),
     db.select({ total: count() }).from(dk_reservations).where(
       and(
-        gte(dk_reservations.starts_at, now),
-        lt(dk_reservations.starts_at, in7Days),
+        gte(dk_reservations.starts_at, weekFrom),
+        lt(dk_reservations.starts_at, weekTo),
         ne(dk_reservations.status, "cancelled"),
       )
     ),
   ]);
 
+  const nextWeekHref = `/admin/vsechny-rezervace?od=${today}&do=${shiftDay(today, 6)}`;
+
   const tiles = [
     { label: "Počet ordinací",   value: practiceCount,   href: "/admin/ordinace",   accent: "#1a3a7a", bg: "#f0f4ff", border: "#d0daf8" },
-    { label: "Celkem rezervací", value: reservationCount, href: "/admin/rezervace",  accent: "#1a6b3c", bg: "#f0faf5", border: "#b8e8d0" },
-    { label: "Další týden",      value: nextWeekCount,    href: "/admin/rezervace",  accent: "#7a5200", bg: "#fffbea", border: "#f0d88a" },
+    { label: "Celkem rezervací", value: reservationCount, href: "/admin/vsechny-rezervace",  accent: "#1a6b3c", bg: "#f0faf5", border: "#b8e8d0" },
+    { label: "Další týden",      value: nextWeekCount,    href: nextWeekHref,  accent: "#7a5200", bg: "#fffbea", border: "#f0d88a" },
   ];
 
   return (
