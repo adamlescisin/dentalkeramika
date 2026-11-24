@@ -4,6 +4,9 @@
  *
  * Vercel cron runs in UTC, so vercel.json schedules this at both 13:00 and 14:00 UTC
  * on Sundays; only the run that lands in the 15:00 Prague hour sends (CEST vs CET).
+ *
+ * A logged-in admin opening this URL gets a test run: every version (admin + each
+ * technician) is sent only to the admin, marked [TEST].
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -18,6 +21,7 @@ import {
 } from "../../../../../db/schema";
 import { and, asc, eq, gte, inArray, lt } from "drizzle-orm";
 import { sendWeeklyDigest, type DigestReservation } from "../../../../lib/email";
+import { getAdminSession } from "../../../../lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -48,16 +52,26 @@ function pragueMidnight(year: number, month: number, day: number): Date {
   return new Date(utcMidnight.getTime() - offsetH * 3600_000);
 }
 
+function json(body: unknown, status = 200) {
+  return new NextResponse(JSON.stringify(body, null, 2), {
+    status,
+    headers: { "Content-Type": "application/json; charset=utf-8" },
+  });
+}
+
 export async function GET(req: NextRequest) {
-  if (CRON_SECRET && req.headers.get("Authorization") !== `Bearer ${CRON_SECRET}`) {
-    return NextResponse.json({ error: "Nejste přihlášeni. Přihlaste se prosím znovu." }, { status: 401 });
+  const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase().trim() || null;
+  const isCron = !CRON_SECRET || req.headers.get("Authorization") === `Bearer ${CRON_SECRET}`;
+  const isTest = !isCron && !!adminEmail && !!(await getAdminSession());
+  if (!isCron && !isTest) {
+    return json({ error: "Přístup odepřen. Testovací přehled může spustit jen přihlášený administrátor." }, 401);
   }
 
   const now = new Date();
   const p = pragueParts(now);
-  const force = req.nextUrl.searchParams.get("force") === "1";
+  const force = isTest || req.nextUrl.searchParams.get("force") === "1";
   if (!force && (p.weekday !== "Sun" || p.hour !== 15)) {
-    return NextResponse.json({ ok: true, skipped: `Prague ${p.weekday} ${p.hour}:00` });
+    return json({ ok: true, skipped: `Prague ${p.weekday} ${p.hour}:00` });
   }
 
   // Upcoming Monday 00:00 → following Monday 00:00 (Prague)
@@ -121,14 +135,16 @@ export async function GET(req: NextRequest) {
     });
 
   const lastDay = new Date(dayStarts[6].getTime() + 12 * 3600_000);
-  const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase().trim() || null;
   const sent: string[] = [];
   const errors: string[] = [];
 
   if (adminEmail) {
     try {
-      await sendWeeklyDigest({ to: [adminEmail], weekStart: dayStarts[0], weekEnd: lastDay, days: byDay(all), showTechnician: true });
-      sent.push("admin");
+      await sendWeeklyDigest({
+        to: [adminEmail], weekStart: dayStarts[0], weekEnd: lastDay, days: byDay(all), showTechnician: true,
+        test: isTest ? "verze pro administrátora (všechny rezervace)" : undefined,
+      });
+      sent.push(isTest ? `administrátor → ${adminEmail}` : "admin");
     } catch (err) {
       errors.push(`admin: ${err instanceof Error ? err.message : err}`);
     }
@@ -141,20 +157,29 @@ export async function GET(req: NextRequest) {
 
   for (const tech of technicians) {
     const email = (tech.email ?? linkedUsers.find((u) => u.id === tech.user_id)?.email ?? "").toLowerCase();
-    if (!email || email === adminEmail) continue;
+    if (!isTest && (!email || email === adminEmail)) continue;
     try {
       await sendWeeklyDigest({
-        to: [email],
+        to: [isTest ? adminEmail! : email],
         weekStart: dayStarts[0],
         weekEnd: lastDay,
         days: byDay(all.filter((r) => r.technicianId === tech.id)),
         showTechnician: false,
+        test: isTest
+          ? `verze pro technika ${tech.display_name} (${email || "technik nemá vyplněný e-mail — ostrý přehled nedostane"})`
+          : undefined,
       });
-      sent.push(tech.display_name);
+      sent.push(isTest ? `technik ${tech.display_name} → ${adminEmail}` : tech.display_name);
     } catch (err) {
       errors.push(`${tech.display_name}: ${err instanceof Error ? err.message : err}`);
     }
   }
 
-  return NextResponse.json({ ok: errors.length === 0, reservations: all.length, sent, errors });
+  return json({
+    ok: errors.length === 0,
+    ...(isTest ? { test: "Testovací e-maily byly odeslány pouze administrátorovi." } : {}),
+    reservations: all.length,
+    sent,
+    errors,
+  });
 }

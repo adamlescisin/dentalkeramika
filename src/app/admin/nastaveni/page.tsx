@@ -67,6 +67,27 @@ export default function AdminNastaveni() {
     setSaving(false);
   }
 
+  const [digestState, setDigestState] = useState<{ ok: boolean; text: string } | null>(null);
+  const [digestSending, setDigestSending] = useState(false);
+
+  async function sendTestDigest() {
+    setDigestSending(true); setDigestState(null);
+    try {
+      const res = await fetch("/api/cron/weekly-digest");
+      const json = await res.json().catch(() => ({})) as { ok?: boolean; error?: string; reservations?: number; sent?: string[]; errors?: string[] };
+      if (!res.ok || json.error) {
+        setDigestState({ ok: false, text: json.error ?? "Odeslání se nezdařilo." });
+      } else if (json.errors?.length) {
+        setDigestState({ ok: false, text: `Některé e-maily se nepodařilo odeslat: ${json.errors.join("; ")}` });
+      } else {
+        setDigestState({ ok: true, text: `Odesláno ${json.sent?.length ?? 0} testovacích e-mailů (rezervací v týdnu: ${json.reservations ?? 0}). Všechny přišly jen na váš e-mail.` });
+      }
+    } catch {
+      setDigestState({ ok: false, text: "Síťová chyba." });
+    }
+    setDigestSending(false);
+  }
+
   const isDirty = rules && draft && JSON.stringify(rules) !== JSON.stringify(draft);
 
   return (
@@ -141,6 +162,25 @@ export default function AdminNastaveni() {
                 className="px-6 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-40" style={{ background: "var(--cyan)" }}>
                 {saving ? "Ukládám…" : "Uložit nastavení"}
               </button>
+            </div>
+
+            <div>
+              <h2 className="text-sm font-semibold mb-2" style={{ color: "var(--ink)" }}>Týdenní přehled rezervací</h2>
+              <div className="bg-white rounded-xl border px-5 py-4 flex flex-col gap-3" style={{ borderColor: "var(--line)" }}>
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <p className="text-xs flex-1 min-w-[200px]" style={{ color: "#6b7f8a" }}>
+                    Odesílá se automaticky každou neděli v 15:00 technikům a administrátorovi. Test pošle všechny verze přehledu na příští týden pouze na váš e-mail.
+                  </p>
+                  <button onClick={sendTestDigest} disabled={digestSending}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold border disabled:opacity-50"
+                    style={{ borderColor: "var(--cyan)", color: "var(--cyan-deep)", background: "#fff" }}>
+                    {digestSending ? "Odesílám…" : "Odeslat testovací přehled"}
+                  </button>
+                </div>
+                {digestState && (
+                  <p className="text-sm" style={{ color: digestState.ok ? "var(--status-confirmed)" : "var(--status-cancelled)" }}>{digestState.text}</p>
+                )}
+              </div>
             </div>
           </>
         )}

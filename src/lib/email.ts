@@ -485,6 +485,8 @@ export async function sendWeeklyDigest(params: {
   weekEnd: Date;
   days: { date: Date; reservations: DigestReservation[] }[];
   showTechnician: boolean;
+  /** Test run: label describing which recipient's version this is. */
+  test?: string;
 }): Promise<void> {
   if (params.to.length === 0) return;
   const dayFmt = (d: Date) =>
@@ -537,6 +539,7 @@ export async function sendWeeklyDigest(params: {
   }).join("");
 
   const body =
+    (params.test ? statusBanner(`TEST — ${esc(params.test)}`, "info") : "") +
     p("Dobrý den,") +
     p(`přehled aktivních rezervací na týden <strong>${shortFmt(params.weekStart)} – ${shortFmt(params.weekEnd)}</strong>. Celkem <strong>${total}</strong> ${total === 1 ? "rezervace" : total >= 2 && total <= 4 ? "rezervace" : "rezervací"}.`) +
     `<tr><td style="padding-bottom:16px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${dayBlocks}</table></td></tr>` +
@@ -544,7 +547,7 @@ export async function sendWeeklyDigest(params: {
 
   await send({
     to: params.to,
-    subject: `Rozpis na týden ${shortFmt(params.weekStart)} – ${shortFmt(params.weekEnd)} (${total})`,
+    subject: `${params.test ? "[TEST] " : ""}Rozpis na týden ${shortFmt(params.weekStart)} – ${shortFmt(params.weekEnd)} (${total})`,
     html: buildEmail(body, { label: "Otevřít administraci", url: `${APP_URL}/admin` }),
   });
 }
