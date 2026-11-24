@@ -24,6 +24,7 @@ import {
   registerWatchChannel,
   stopWatchChannel,
 } from "../../../../lib/google-calendar";
+import { notifyReservationChange } from "../../../../lib/reservation-notify";
 import { randomUUID } from "crypto";
 
 const CRON_SECRET = process.env.CRON_SECRET;
@@ -127,6 +128,12 @@ export async function GET(req: NextRequest) {
             to_json: JSON.stringify({ reason: "Google Calendar event deleted" }),
           });
 
+          await notifyReservationChange({
+            reservation: { ...reservation, status: "cancelled" },
+            kind: "cancelled",
+            changedBy: "technik (Google kalendář)",
+          });
+
           report.push({
             technician: tech.display_name,
             reservation_id: reservation.id,
@@ -162,6 +169,13 @@ export async function GET(req: NextRequest) {
             type: "rescheduled",
             from_json: JSON.stringify({ starts_at: oldStart }),
             to_json: JSON.stringify({ starts_at: gcalStartDt }),
+          });
+
+          await notifyReservationChange({
+            reservation: { ...reservation, starts_at: gcalStartDt },
+            kind: "rescheduled",
+            oldStartsAt: oldStart,
+            changedBy: "technik (Google kalendář)",
           });
 
           report.push({

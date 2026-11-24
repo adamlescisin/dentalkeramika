@@ -6,8 +6,7 @@ import {
   dk_account_users,
   dk_reservation_events,
   dk_booking_rules,
-  dk_technicians,
-  dk_locations,
+  dk_users,
 } from "../../../../../../../db/schema";
 import { eq, and } from "drizzle-orm";
 import { getSessionFromCookies } from "../../../../../../lib/auth";
@@ -15,10 +14,17 @@ import {
   patchCalendarEvent,
   deleteCalendarEvent,
 } from "../../../../../../lib/google-calendar";
-import {
-  sendRescheduleConfirmation,
-  sendCancellationConfirmation,
-} from "../../../../../../lib/email";
+import { notifyReservationChange } from "../../../../../../lib/reservation-notify";
+
+async function practiceActorLabel(userId: string): Promise<string> {
+  const [u] = await db
+    .select({ first_name: dk_users.first_name, last_name: dk_users.last_name })
+    .from(dk_users)
+    .where(eq(dk_users.id, userId))
+    .limit(1);
+  const name = u ? `${u.first_name} ${u.last_name}`.trim() : "";
+  return name ? `ordinace (${name})` : "ordinace";
+}
 
 export const dynamic = "force-dynamic";
 
@@ -201,12 +207,14 @@ export async function PATCH(
       .catch(console.error);
   }
 
-  // Fetch location for email
-  const [location] = await db
-    .select()
-    .from(dk_locations)
-    .where(eq(dk_locations.id, reservation.location_id))
-    .limit(1);
+  // Awaited so Vercel doesn't terminate the function before Resend responds.
+  await notifyReservationChange({
+    reservation: { ...reservation, starts_at: newStart, ends_at: newEnd, status: "rescheduled" },
+    kind: "rescheduled",
+    oldStartsAt: oldStart,
+    changedBy: await practiceActorLabel(session.userId),
+    actorUserId: session.userId,
+  });
 
   return NextResponse.json({
     data: { id, status: "rescheduled", starts_at: newStart },
@@ -286,11 +294,13 @@ export async function DELETE(
     ).catch(console.error);
   }
 
-  const [service] = await db
-    .select()
-    .from(dk_services)
-    .where(eq(dk_services.id, reservation.service_id))
-    .limit(1);
+  await notifyReservationChange({
+    reservation: { ...reservation, status: "cancelled" },
+    kind: "cancelled",
+    reason: reason ?? null,
+    changedBy: await practiceActorLabel(session.userId),
+    actorUserId: session.userId,
+  });
 
   return NextResponse.json({ data: { id, status: "cancelled" } });
 }

@@ -19,6 +19,13 @@ export async function PATCH(
   for (const key of allowed) {
     if (key in body) (patch as Record<string, unknown>)[key] = body[key];
   }
+  if ("email" in body) {
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "Neplatný e-mail." }, { status: 400 });
+    }
+    patch.email = email || null;
+  }
   if (Object.keys(patch).length === 0) return NextResponse.json({ error: "Nothing to update" }, { status: 400 });
 
   const [updated] = await db.update(dk_technicians).set(patch).where(eq(dk_technicians.id, id)).returning();

@@ -3,6 +3,7 @@ import { db } from "../../../../../../../../db";
 import { dk_reservations, dk_reservation_events } from "../../../../../../../../db/schema";
 import { eq } from "drizzle-orm";
 import { getAdminSession } from "../../../../../../../lib/admin-auth";
+import { notifyReservationChange } from "../../../../../../../lib/reservation-notify";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,13 @@ export async function POST(
   await db.insert(dk_reservation_events).values({
     reservation_id: id, actor: `admin:${session.userId}`, type: "rejected",
     to_json: reason ? JSON.stringify({ reason }) : null,
+  });
+
+  await notifyReservationChange({
+    reservation: { ...row, status: "rejected" },
+    kind: "rejected",
+    reason: reason ?? null,
+    changedBy: "administrátor DentálníKeramika",
   });
 
   return NextResponse.json({ ok: true });

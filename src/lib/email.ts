@@ -320,50 +320,19 @@ export async function sendReservationPending(params: {
   });
 }
 
-export async function sendRescheduleConfirmation(params: {
-  email: string;
-  serviceName: string;
-  oldStartsAt: Date;
-  newStartsAt: Date;
-  locationLabel: string;
-  technicianName: string;
-}): Promise<void> {
-  const fmt = (d: Date) =>
-    d.toLocaleString("cs-CZ", {
-      timeZone: "Europe/Prague",
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+// ─── Reservation change notifications (practice + technician) ────────────────
 
-  const body =
-    p("Dobrý den,") +
-    p("Váš termín byl přeložen na nový datum.") +
-    detailTable([
-      ["Původní termín", `<s style="color:#9aacb8;">${fmt(params.oldStartsAt)}</s>`],
-      ["Nový termín", fmt(params.newStartsAt)],
-      ["Adresa", params.locationLabel],
-      ["Technik", params.technicianName],
-    ]) +
-    note(`Termín lze opět přeložit nebo zrušit přes <a href="${APP_URL}/portal/rezervace" style="color:#0697BC;text-decoration:none;">portál</a>.`);
-
-  await send({
-    to: params.email,
-    subject: `Termín přeložen — ${params.serviceName}`,
-    html: buildEmail(body, { label: "Zobrazit rezervaci", url: `${APP_URL}/portal/rezervace` }),
-  });
+export function esc(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
-export async function sendCancellationConfirmation(params: {
-  email: string;
-  serviceName: string;
-  startsAt: Date;
-  reason?: string;
-}): Promise<void> {
-  const dateStr = params.startsAt.toLocaleString("cs-CZ", {
+function fmtPrague(d: Date): string {
+  return d.toLocaleString("cs-CZ", {
     timeZone: "Europe/Prague",
     weekday: "long",
     year: "numeric",
@@ -372,23 +341,211 @@ export async function sendCancellationConfirmation(params: {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
 
-  const rows: [string, string][] = [
-    ["Služba", params.serviceName],
-    ["Datum", dateStr],
-  ];
-  if (params.reason) rows.push(["Důvod", params.reason]);
+/** Coloured status strip shown at the top of the email body. */
+function statusBanner(text: string, tone: "info" | "danger"): string {
+  const c = tone === "danger"
+    ? { bg: "#fdf0ee", border: "#f0b4aa", fg: "#8a2a1a" }
+    : { bg: "#e8f6fa", border: "#9fd6e6", fg: "#046B87" };
+  return `<tr><td style="padding-bottom:20px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background:${c.bg};border:1px solid ${c.border};border-radius:8px;">
+      <tr><td style="padding:12px 16px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:${c.fg};">
+        ${text}
+      </td></tr>
+    </table>
+  </td></tr>`;
+}
+
+export type ReservationChangeKind = "rescheduled" | "cancelled" | "rejected";
+
+export type ReservationChangeDetails = {
+  kind: ReservationChangeKind;
+  reservationId: string;
+  serviceName: string;
+  accountName: string;
+  startsAt: Date;
+  oldStartsAt?: Date;
+  locationLabel: string;
+  locationAddress: string;
+  technicianName?: string;
+  requesterName: string;
+  requesterPhone: string;
+  patientName?: string | null;
+  note?: string | null;
+  reason?: string | null;
+  /** Who made the change, already human-readable, e.g. "ordinace (Jan Novák)". */
+  changedBy: string;
+};
+
+const KIND_TEXT: Record<ReservationChangeKind, { banner: string; subject: string; tone: "info" | "danger" }> = {
+  rescheduled: { banner: "Termín byl přeložen", subject: "Termín přeložen", tone: "info" },
+  cancelled:   { banner: "Termín byl zrušen",   subject: "Termín zrušen",   tone: "danger" },
+  rejected:    { banner: "Žádost o termín byla zamítnuta", subject: "Žádost zamítnuta", tone: "danger" },
+};
+
+function changeRows(d: ReservationChangeDetails, audience: "practice" | "technician"): [string, string][] {
+  const rows: [string, string][] = [["Služba", esc(d.serviceName)]];
+  if (d.kind === "rescheduled" && d.oldStartsAt) {
+    rows.push(["Původní termín", `<s style="color:#9aacb8;font-weight:400;">${fmtPrague(d.oldStartsAt)}</s>`]);
+    rows.push(["Nový termín", `<span style="color:#046B87;">${fmtPrague(d.startsAt)}</span>`]);
+  } else {
+    rows.push(["Termín", d.kind === "rescheduled" ? fmtPrague(d.startsAt) : `<s style="color:#9aacb8;font-weight:400;">${fmtPrague(d.startsAt)}</s>`]);
+  }
+  if (audience === "technician") rows.push(["Ordinace", esc(d.accountName)]);
+  rows.push(["Adresa", `${esc(d.locationLabel)}<br /><span style="font-weight:400;color:#6b7f8a;">${esc(d.locationAddress)}</span>`]);
+  if (audience === "practice" && d.technicianName) rows.push(["Technik", esc(d.technicianName)]);
+  if (audience === "technician") {
+    rows.push(["Objednal", `${esc(d.requesterName)}<br /><span style="font-weight:400;color:#6b7f8a;">${esc(d.requesterPhone)}</span>`]);
+    if (d.patientName) rows.push(["Pacient", esc(d.patientName)]);
+    if (d.note) rows.push(["Poznámka", `<span style="font-weight:400;">${esc(d.note)}</span>`]);
+  }
+  if (d.reason) rows.push(["Důvod", `<span style="font-weight:400;">${esc(d.reason)}</span>`]);
+  rows.push(["Změnu provedl", `<span style="font-weight:400;">${esc(d.changedBy)}</span>`]);
+  return rows;
+}
+
+export async function sendReservationChangeToPractice(to: string[], d: ReservationChangeDetails): Promise<void> {
+  if (to.length === 0) return;
+  const k = KIND_TEXT[d.kind];
+  const lead =
+    d.kind === "rescheduled"
+      ? "Vaše rezervace byla přeložena na nový termín. Technik přijede v nově uvedený čas."
+      : d.kind === "cancelled"
+      ? "Vaše rezervace byla zrušena. Technik v původním termínu nepřijede."
+      : "Vaši žádost o termín bohužel nemůžeme potvrdit.";
+  const followUp =
+    d.kind === "rescheduled"
+      ? `Termín lze dále spravovat v <a href="${APP_URL}/portal/rezervace" style="color:#0697BC;text-decoration:none;">portálu</a>.`
+      : `Nový termín si můžete objednat přes <a href="${APP_URL}/rezervace" style="color:#0697BC;text-decoration:none;">rezervační formulář</a>.`;
+
+  const body =
+    statusBanner(k.banner, k.tone) +
+    p("Dobrý den,") +
+    p(lead) +
+    detailTable(changeRows(d, "practice")) +
+    note(followUp);
+
+  const cta = d.kind === "rescheduled"
+    ? { label: "Zobrazit rezervaci", url: `${APP_URL}/portal/rezervace/${d.reservationId}` }
+    : { label: "Objednat nový termín", url: `${APP_URL}/rezervace` };
+
+  await send({
+    to,
+    subject: `${k.subject} — ${d.serviceName}`,
+    html: buildEmail(body, cta),
+  });
+}
+
+export async function sendReservationChangeToTechnician(to: string[], d: ReservationChangeDetails): Promise<void> {
+  if (to.length === 0) return;
+  const k = KIND_TEXT[d.kind];
+  const lead =
+    d.kind === "rescheduled"
+      ? "Rezervace ve vašem rozpisu byla přeložena. Google kalendář je aktualizován."
+      : d.kind === "cancelled"
+      ? "Rezervace ve vašem rozpisu byla zrušena. Termín je opět volný."
+      : "Čekající žádost o termín byla zamítnuta.";
+
+  const body =
+    statusBanner(k.banner, k.tone) +
+    p("Dobrý den,") +
+    p(lead) +
+    detailTable(changeRows(d, "technician"));
+
+  await send({
+    to,
+    subject: `${k.subject} — ${d.serviceName}, ${d.startsAt.toLocaleDateString("cs-CZ", { timeZone: "Europe/Prague", day: "numeric", month: "numeric" })}`,
+    html: buildEmail(body),
+  });
+}
+
+// ─── Weekly digest (technician + admin) ───────────────────────────────────────
+
+export type DigestReservation = {
+  startsAt: Date;
+  endsAt: Date;
+  status: string;
+  serviceName: string;
+  accountName: string;
+  locationLabel: string;
+  locationAddress: string;
+  accessNote?: string | null;
+  requesterName: string;
+  requesterPhone: string;
+  patientName?: string | null;
+  note?: string | null;
+  technicianName?: string;
+};
+
+export async function sendWeeklyDigest(params: {
+  to: string[];
+  weekStart: Date;
+  weekEnd: Date;
+  days: { date: Date; reservations: DigestReservation[] }[];
+  showTechnician: boolean;
+}): Promise<void> {
+  if (params.to.length === 0) return;
+  const dayFmt = (d: Date) =>
+    d.toLocaleDateString("cs-CZ", { timeZone: "Europe/Prague", weekday: "long", day: "numeric", month: "long" });
+  const timeFmt = (d: Date) =>
+    d.toLocaleTimeString("cs-CZ", { timeZone: "Europe/Prague", hour: "2-digit", minute: "2-digit" });
+  const shortFmt = (d: Date) =>
+    d.toLocaleDateString("cs-CZ", { timeZone: "Europe/Prague", day: "numeric", month: "numeric" });
+
+  const total = params.days.reduce((n, d) => n + d.reservations.length, 0);
+
+  const dayBlocks = params.days.map(({ date, reservations }) => {
+    const header = `<tr><td style="padding:18px 0 8px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;
+        color:#23323D;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #0697BC;">
+        ${dayFmt(date)}
+        <span style="float:right;color:#6b7f8a;font-weight:400;text-transform:none;letter-spacing:0;">
+          ${reservations.length === 0 ? "volno" : `${reservations.length}× rezervace`}
+        </span>
+      </td></tr>`;
+    if (reservations.length === 0) {
+      return header + `<tr><td style="padding:10px 0 4px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#9aacb8;">Žádné rezervace.</td></tr>`;
+    }
+    const items = reservations.map((r) => {
+      const pending = r.status === "pending"
+        ? ` <span style="background:#fffbea;color:#7a5200;font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;">čeká na potvrzení</span>`
+        : "";
+      const lines = [
+        `<strong style="color:#23323D;">${esc(r.accountName)}</strong> · ${esc(r.locationLabel)}`,
+        `<span style="color:#6b7f8a;">${esc(r.locationAddress)}</span>`,
+        `Objednal: ${esc(r.requesterName)}, <a href="tel:${esc(r.requesterPhone.replace(/\s/g, ""))}" style="color:#0697BC;text-decoration:none;">${esc(r.requesterPhone)}</a>`,
+        r.patientName ? `Pacient: ${esc(r.patientName)}` : null,
+        params.showTechnician && r.technicianName ? `Technik: ${esc(r.technicianName)}` : null,
+        r.accessNote ? `<span style="color:#6b7f8a;">Přístup: ${esc(r.accessNote)}</span>` : null,
+        r.note ? `<span style="color:#6b7f8a;">Poznámka: ${esc(r.note)}</span>` : null,
+      ].filter(Boolean).join("<br />");
+      return `<tr><td style="padding:12px 0;border-bottom:1px solid #D6E0E4;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+          <td style="width:92px;vertical-align:top;font-family:Arial,Helvetica,sans-serif;">
+            <div style="font-size:16px;font-weight:700;color:#046B87;">${timeFmt(r.startsAt)}</div>
+            <div style="font-size:12px;color:#9aacb8;">do ${timeFmt(r.endsAt)}</div>
+          </td>
+          <td style="vertical-align:top;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:#23323D;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:2px;">${esc(r.serviceName)}${pending}</div>
+            ${lines}
+          </td>
+        </tr></table>
+      </td></tr>`;
+    }).join("");
+    return header + items;
+  }).join("");
 
   const body =
     p("Dobrý den,") +
-    p("Váš termín byl zrušen.") +
-    detailTable(rows) +
-    note(`Nový termín si lze objednat přes <a href="${APP_URL}/rezervace" style="color:#0697BC;text-decoration:none;">rezervační formulář</a>.`);
+    p(`přehled aktivních rezervací na týden <strong>${shortFmt(params.weekStart)} – ${shortFmt(params.weekEnd)}</strong>. Celkem <strong>${total}</strong> ${total === 1 ? "rezervace" : total >= 2 && total <= 4 ? "rezervace" : "rezervací"}.`) +
+    `<tr><td style="padding-bottom:16px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${dayBlocks}</table></td></tr>` +
+    note("Rozpis vychází ze stavu portálu v neděli odpoledne. Změny provedené později dorazí samostatným e-mailem.");
 
   await send({
-    to: params.email,
-    subject: `Termín zrušen — ${params.serviceName}`,
-    html: buildEmail(body),
+    to: params.to,
+    subject: `Rozpis na týden ${shortFmt(params.weekStart)} – ${shortFmt(params.weekEnd)} (${total})`,
+    html: buildEmail(body, { label: "Otevřít administraci", url: `${APP_URL}/admin` }),
   });
 }
 
