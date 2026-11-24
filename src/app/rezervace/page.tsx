@@ -7,8 +7,9 @@ import {
   dk_account_users,
   dk_accounts,
   dk_users,
+  dk_reservations,
 } from "../../../db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import BookingWizard from "./BookingWizard";
 
 export const dynamic = "force-dynamic";
@@ -59,7 +60,16 @@ export default async function RezervacePage() {
 
   const isPending = membership.account.status === "pending";
   const userName = user ? `${user.first_name} ${user.last_name}`.trim() : "";
-  const userPhone = user?.phone ?? "";
+  let userPhone = user?.phone ?? "";
+  if (!userPhone) {
+    const [last] = await db
+      .select({ phone: dk_reservations.requester_phone })
+      .from(dk_reservations)
+      .where(eq(dk_reservations.created_by_user_id, session.userId))
+      .orderBy(desc(dk_reservations.created_at))
+      .limit(1);
+    userPhone = last?.phone ?? "";
+  }
 
   return (
     <BookingWizard

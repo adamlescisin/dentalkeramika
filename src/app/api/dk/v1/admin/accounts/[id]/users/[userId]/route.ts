@@ -50,6 +50,13 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       .where(eq(dk_users.id, userId));
   }
 
+  if (body.phone !== undefined) {
+    const phone = typeof body.phone === "string" ? body.phone.trim().slice(0, 32) : "";
+    await db.update(dk_users)
+      .set({ phone: phone || null, updated_at: new Date() })
+      .where(eq(dk_users.id, userId));
+  }
+
   return NextResponse.json({ ok: true });
 }
 

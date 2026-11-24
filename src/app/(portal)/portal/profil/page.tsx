@@ -20,6 +20,12 @@ export default async function ProfilPage() {
 
   if (!membership) redirect("/portal/dashboard");
 
+  const [me] = await db
+    .select({ email: dk_users.email, phone: dk_users.phone })
+    .from(dk_users)
+    .where(eq(dk_users.id, session.userId))
+    .limit(1);
+
   const locations = await db
     .select()
     .from(dk_locations)
@@ -52,6 +58,7 @@ export default async function ProfilPage() {
       role={membership.role}
       locations={locations}
       team={teamMembers}
+      me={{ email: me?.email ?? "", phone: me?.phone ?? null }}
     />
   );
 }

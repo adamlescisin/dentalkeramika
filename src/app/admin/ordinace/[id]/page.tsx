@@ -82,7 +82,7 @@ export default function OrdinaceDetailPage() {
 
   // Members: inline editing
   const [editingMember, setEditingMember] = useState<string | null>(null); // membership_id
-  const [memberEdit, setMemberEdit] = useState({ email: "", role: "" });
+  const [memberEdit, setMemberEdit] = useState({ email: "", role: "", phone: "" });
   const [memberSaving, setMemberSaving] = useState(false);
   const [memberError, setMemberError] = useState<string | null>(null);
 
@@ -166,7 +166,7 @@ export default function OrdinaceDetailPage() {
 
   function openMemberEdit(m: Member) {
     setEditingMember(m.membership_id);
-    setMemberEdit({ email: m.email, role: m.role });
+    setMemberEdit({ email: m.email, role: m.role, phone: m.phone ?? "" });
     setMemberError(null);
   }
 
@@ -459,11 +459,17 @@ export default function OrdinaceDetailPage() {
                     <div key={m.membership_id} className="px-5 py-4 flex flex-col gap-3">
                       {editingMember === m.membership_id ? (
                         <div className="flex flex-col gap-3">
-                          <div className="grid md:grid-cols-2 gap-3">
+                          <div className="grid md:grid-cols-3 gap-3">
                             <div>
                               <label className={labelCls} style={{ color: "var(--ink)" }}>E-mail</label>
                               <input type="email" value={memberEdit.email}
                                 onChange={(e) => setMemberEdit((f) => ({ ...f, email: e.target.value }))}
+                                className={inputCls} style={inputStyle} />
+                            </div>
+                            <div>
+                              <label className={labelCls} style={{ color: "var(--ink)" }}>Telefon</label>
+                              <input type="tel" value={memberEdit.phone} placeholder="+420 777 888 999"
+                                onChange={(e) => setMemberEdit((f) => ({ ...f, phone: e.target.value }))}
                                 className={inputCls} style={inputStyle} />
                             </div>
                             <div>

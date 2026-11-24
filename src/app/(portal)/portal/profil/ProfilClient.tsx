@@ -46,6 +46,84 @@ const STATUS_LABEL: Record<string, string> = {
   suspended: "Pozastaveno",
 };
 
+// ─── My account (contact phone) ───────────────────────────────────────────────
+
+function MyAccountSection({ me }: { me: { email: string; phone: string | null } }) {
+  const [phone, setPhone] = useState(me.phone ?? "");
+  const [stored, setStored] = useState(me.phone ?? "");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function save(value: string) {
+    setSaving(true); setError(null); setSaved(false);
+    const res = await fetch("/api/dk/v1/account/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: value }),
+    });
+    setSaving(false);
+    if (res.ok) {
+      const json = await res.json().catch(() => ({}));
+      const next = (json as { data?: { phone?: string | null } }).data?.phone ?? "";
+      setPhone(next); setStored(next); setSaved(true);
+    } else {
+      setError("Uložení se nezdařilo.");
+    }
+  }
+
+  return (
+    <section>
+      <h2 className="text-lg font-bold mb-1" style={{ color: "var(--ink)", fontVariationSettings: "'wdth' 112" }}>
+        Můj účet
+      </h2>
+      <p className="text-xs mb-3" style={{ color: "#6b7f8a" }}>
+        Telefon se automaticky předvyplní při nové rezervaci. Ukládá se poslední použité číslo.
+      </p>
+      <div className="bg-white rounded-xl border p-5 flex flex-col gap-4" style={{ borderColor: "var(--line)" }}>
+        <div className="flex gap-4">
+          <span className="text-sm w-40 shrink-0 font-medium" style={{ color: "#6b7f8a" }}>Přihlašovací e-mail</span>
+          <span className="text-sm" style={{ color: "var(--ink)" }}>{me.email}</span>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="my-phone" className="text-sm font-medium" style={{ color: "var(--ink)" }}>Telefon</label>
+          <div className="flex gap-2 flex-wrap">
+            <input
+              id="my-phone"
+              type="tel"
+              value={phone}
+              onChange={(e) => { setPhone(e.target.value); setSaved(false); }}
+              placeholder="+420 777 888 999"
+              className="flex-1 min-w-[180px] border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2"
+              style={{ borderColor: "var(--line)", color: "var(--ink)" }}
+            />
+            <button
+              onClick={() => save(phone)}
+              disabled={saving || phone.trim() === stored}
+              className="text-sm font-semibold px-4 py-2 rounded-lg text-white disabled:opacity-50"
+              style={{ background: "var(--cyan)" }}
+            >
+              {saving ? "Ukládám…" : "Uložit"}
+            </button>
+            {stored && (
+              <button
+                onClick={() => save("")}
+                disabled={saving}
+                className="text-sm px-4 py-2 rounded-lg border disabled:opacity-50"
+                style={{ borderColor: "var(--line)", color: "var(--status-cancelled)" }}
+              >
+                Odebrat
+              </button>
+            )}
+          </div>
+        </div>
+        {saved && <p className="text-sm" style={{ color: "var(--status-confirmed)" }}>Uloženo.</p>}
+        {error && <p className="text-sm" style={{ color: "var(--status-cancelled)" }}>{error}</p>}
+      </div>
+    </section>
+  );
+}
+
 // ─── Billing section ──────────────────────────────────────────────────────────
 
 function BillingSection({ account, isOwner }: { account: Account; isOwner: boolean }) {
@@ -554,11 +632,13 @@ export default function ProfilClient({
   role,
   locations,
   team,
+  me,
 }: {
   account: Account;
   role: string;
   locations: Location[];
   team: TeamMember[];
+  me: { email: string; phone: string | null };
 }) {
   const isOwner = role === "owner";
 
@@ -568,6 +648,7 @@ export default function ProfilClient({
         Profil ordinace
       </h1>
 
+      <MyAccountSection me={me} />
       <BillingSection account={account} isOwner={isOwner} />
       <LocationsSection initialLocations={locations} isOwner={isOwner} />
       <TeamSection initialTeam={team} isOwner={isOwner} />

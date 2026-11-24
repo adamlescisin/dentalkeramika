@@ -267,6 +267,15 @@ export async function POST(req: NextRequest) {
     to_json: JSON.stringify({ status }),
   });
 
+  // Remember the last-used phone on the user so the next booking is prefilled
+  const trimmedPhone = requesterPhone.trim().slice(0, 32);
+  if (trimmedPhone) {
+    await db
+      .update(dk_users)
+      .set({ phone: trimmedPhone, updated_at: new Date() })
+      .where(eq(dk_users.id, session.userId));
+  }
+
   // Expire the slot hold if one was provided
   if (body.holdToken) {
     await db
