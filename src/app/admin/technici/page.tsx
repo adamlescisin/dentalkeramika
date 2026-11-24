@@ -91,7 +91,7 @@ export default function AdminTechnici() {
         </div>
 
         {loading ? (
-          <div className="text-sm text-center" style={{ color: "#6b7f8a" }}>Načítám…</div>
+          <div className="flex items-center justify-center gap-3 py-8 text-sm" style={{ color: "#6b7f8a" }} role="status"><span className="dk-spinner" />Načítám…</div>
         ) : (
           <div className="bg-white rounded-xl border divide-y overflow-hidden" style={{ borderColor: "var(--line)" }}>
             {techs.length === 0 && (

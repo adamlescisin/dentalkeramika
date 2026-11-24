@@ -167,7 +167,7 @@ export default function LoginPage() {
             style={{ background: "var(--cyan)" }}
           >
             {loading
-              ? "…"
+              ? tab === "password" ? "Přihlašuji…" : "Odesílám…"
               : tab === "password"
               ? "Přihlásit se"
               : tab === "magic"

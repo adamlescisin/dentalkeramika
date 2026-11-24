@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo } from "next/font/google";
 import Script from "next/script";
+import { InteractionFeedback } from "./_components/InteractionFeedback";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -25,6 +26,7 @@ export default function RootLayout({
   return (
     <html lang="cs" className={archivo.variable}>
       <body className="min-h-screen">
+        <InteractionFeedback />
         {children}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-Z5L6VKS4XQ"

@@ -110,7 +110,7 @@ export default function AdminSluzby() {
         {error && <div className="rounded-xl p-4 border text-sm" style={{ background: "#fff5f5", borderColor: "#f07a7a", color: "#7a1a1a" }}>{error}</div>}
 
         {loading ? (
-          <div className="text-sm text-center" style={{ color: "#6b7f8a" }}>Načítám…</div>
+          <div className="flex items-center justify-center gap-3 py-8 text-sm" style={{ color: "#6b7f8a" }} role="status"><span className="dk-spinner" />Načítám…</div>
         ) : (
           <div className="bg-white rounded-xl border divide-y overflow-hidden" style={{ borderColor: "var(--line)" }}>
             {services.length === 0 && <div className="px-5 py-4 text-sm" style={{ color: "#6b7f8a" }}>Žádné služby.</div>}
