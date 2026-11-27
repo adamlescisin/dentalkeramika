@@ -12,9 +12,31 @@ interface EmailPayload {
   subject: string;
   html: string;
   replyTo?: string;
+  /**
+   * Essential = the recipient asked for this e-mail themselves and can't log in
+   * without it (verification, magic link, password reset). Always sent.
+   */
+  essential?: boolean;
+}
+
+/**
+ * Global kill switch for notification e-mails (invites, reservation
+ * confirmations/changes, weekly digest). OFF unless explicitly enabled with
+ * EMAIL_NOTIFICATIONS_ENABLED=true, so a bulk import of practices, users or
+ * reservations can't e-mail anyone by accident. Essential auth e-mails are
+ * unaffected.
+ */
+export function notificationsEnabled(): boolean {
+  return process.env.EMAIL_NOTIFICATIONS_ENABLED === "true";
 }
 
 async function send(payload: EmailPayload): Promise<void> {
+  if (!payload.essential && !notificationsEnabled()) {
+    const to = Array.isArray(payload.to) ? payload.to.join(", ") : payload.to;
+    console.info(`[email] suppressed (EMAIL_NOTIFICATIONS_ENABLED is not "true"): "${payload.subject}" → ${to || "(no recipients)"}`);
+    return;
+  }
+
   if (!process.env.RESEND_API_KEY) {
     throw new Error("RESEND_API_KEY is not set");
   }
@@ -200,6 +222,7 @@ export async function sendVerificationEmail(
   await send({
     to: email,
     subject: "Potvrďte svůj e-mail — DentálníKeramika",
+    essential: true,
     html: buildEmail(body, { label: "Ověřit e-mail", url: verifyUrl }),
   });
 }
@@ -217,6 +240,7 @@ export async function sendMagicLink(
   await send({
     to: email,
     subject: "Přihlásit se — DentálníKeramika",
+    essential: true,
     html: buildEmail(body, { label: "Přihlásit se", url: magicUrl }),
   });
 }
@@ -234,6 +258,7 @@ export async function sendPasswordReset(
   await send({
     to: email,
     subject: "Obnova hesla — DentálníKeramika",
+    essential: true,
     html: buildEmail(body, { label: "Nastavit nové heslo", url: resetUrl }),
   });
 }

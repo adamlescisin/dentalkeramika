@@ -63,6 +63,10 @@ npx drizzle-kit migrate   # apply pending migrations (uses DATABASE_URL_UNPOOLED
 
 Copy `.env.example` to `.env.local` and fill in values. Never commit `.env.local`.
 
+## E-mail kill switch
+
+Notification e-mails (onboarding/team invites, reservation confirmation/pending/change, GCal-driven change e-mails, weekly digest) are **off unless `EMAIL_NOTIFICATIONS_ENABLED=true`**. Suppressed sends are logged as `[email] suppressed …`. Verification, magic-link and password-reset e-mails are always sent (users can't log in without them). See `send()` in `src/lib/email.ts`.
+
 ## Migrations
 
 The initial migration (`db/migrations/0000_initial.sql`) must be run manually on a fresh database:
