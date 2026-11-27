@@ -371,7 +371,28 @@ export const dk_reservations = pgTable(
     index("dk_reservations_account_idx").on(t.account_id),
     index("dk_reservations_technician_idx").on(t.technician_id, t.starts_at),
     index("dk_reservations_gcal_idx").on(t.google_event_id),
+    uniqueIndex("dk_reservations_legacy_bookly_idx")
+      .on(t.legacy_bookly_appointment_id)
+      .where(sql`legacy_bookly_appointment_id IS NOT NULL`),
   ]
+);
+
+// ─── Legacy import mappings (admin migration wizard) ─────────────────────────
+
+export const dk_legacy_mappings = pgTable(
+  "dk_legacy_mappings",
+  {
+    id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+    kind: varchar("kind", { length: 16 }).notNull(), // 'customer' | 'service'
+    legacy_key: varchar("legacy_key", { length: 255 }).notNull(),
+    target_id: uuid("target_id").notNull(),
+    target_account_id: uuid("target_account_id").references(() => dk_accounts.id, { onDelete: "cascade" }),
+    updated_by: uuid("updated_by").references(() => dk_users.id, { onDelete: "set null" }),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .default(sql`now()`),
+  },
+  (t) => [uniqueIndex("dk_legacy_mappings_key_idx").on(t.kind, t.legacy_key)]
 );
 
 // ─── Reservation audit trail ──────────────────────────────────────────────────

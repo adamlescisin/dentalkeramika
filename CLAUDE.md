@@ -67,6 +67,15 @@ Copy `.env.example` to `.env.local` and fill in values. Never commit `.env.local
 
 Notification e-mails (onboarding/team invites, reservation confirmation/pending/change, GCal-driven change e-mails, weekly digest) are **off unless `EMAIL_NOTIFICATIONS_ENABLED=true`**. Suppressed sends are logged as `[email] suppressed …`. Verification, magic-link and password-reset e-mails are always sent (users can't log in without them). See `send()` in `src/lib/email.ts`.
 
+## Legacy reservation import (Bookly)
+
+Admin wizard at `/admin/migrace` (requires `db/migrations/0004_legacy_migration.sql`). CSV parsing/mapping in `src/lib/legacy-csv.ts` (shared by browser and server); API in `src/app/api/dk/v1/admin/migration/{context,import}`.
+
+- Idempotent: `legacy_bookly_appointment_id` has a partial unique index; already-imported IDs are skipped, never updated.
+- Rows are mapped to **existing** users/practices only (by e-mail, remembered mapping, or phone suggestion); admin can override per customer or per row. Mapping choices are stored in `dk_legacy_mappings`.
+- Times in the CSV are Europe/Prague local. Buffers come from the mapped portal service; duration from the CSV.
+- Sends no e-mails and creates no Google Calendar events (`google_event_id` stays NULL).
+
 ## Migrations
 
 The initial migration (`db/migrations/0000_initial.sql`) must be run manually on a fresh database:
