@@ -12,19 +12,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "../../../../../db";
-import {
-  dk_technicians,
-  dk_reservations,
-  dk_google_watch_channels,
-  dk_reservation_events,
-} from "../../../../../db/schema";
-import { eq, and, notInArray } from "drizzle-orm";
+import { dk_technicians, dk_google_watch_channels } from "../../../../../db/schema";
+import { eq } from "drizzle-orm";
 import {
   listEventsSince,
   registerWatchChannel,
   stopWatchChannel,
 } from "../../../../lib/google-calendar";
-import { notifyReservationChange } from "../../../../lib/reservation-notify";
+import { processCalendarEvents } from "../../../../lib/gcal-sync";
 import { randomUUID } from "crypto";
 
 const CRON_SECRET = process.env.CRON_SECRET;
@@ -51,7 +46,7 @@ export async function GET(req: NextRequest) {
       .where(eq(dk_google_watch_channels.technician_id, tech.id))
       .limit(1);
 
-    const { events, nextSyncToken, gone } = await listEventsSince(
+    let { events, nextSyncToken, gone } = await listEventsSince(
       tech.google_calendar_id,
       channel?.sync_token ?? null,
       tech.id
@@ -65,128 +60,26 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    if (gone) {
+      // Sync token expired — fall back to a full ±180-day window to get a fresh token.
+      ({ events, nextSyncToken, gone } = await listEventsSince(
+        tech.google_calendar_id,
+        null,
+        tech.id
+      ));
+    }
+
+    const result = await processCalendarEvents(tech, events);
+    report.push(...result.report);
+
+    // Advance the token only if every event was applied, so failures are retried.
+    if (result.failed > 0) nextSyncToken = null;
+
     if (nextSyncToken && channel) {
       await db
         .update(dk_google_watch_channels)
         .set({ sync_token: nextSyncToken })
         .where(eq(dk_google_watch_channels.id, channel.id));
-    }
-
-    for (const event of events) {
-      if (!event.id) continue;
-
-      const [reservation] = await db
-        .select()
-        .from(dk_reservations)
-        .where(eq(dk_reservations.google_event_id, event.id))
-        .limit(1);
-
-      if (!reservation) {
-        // Event exists in calendar but no matching reservation — log for triage
-        report.push({
-          technician: tech.display_name,
-          google_event_id: event.id,
-          issue: "event_without_reservation",
-          summary: event.summary,
-          start: event.start?.dateTime,
-        });
-        continue;
-      }
-
-      // Deleted event
-      if (event.status === "cancelled") {
-        if (
-          ["cancelled", "completed", "no_show"].includes(reservation.status)
-        ) {
-          continue; // Already terminal, nothing to do
-        }
-
-        // 10-minute grace: check if the event is really gone
-        // (in a nightly job we don't have 10 minutes, but we do a second read)
-        const secondRead = await listEventsSince(
-          tech.google_calendar_id!,
-          null,
-          tech.id,
-          new Date(event.start?.dateTime ?? Date.now()),
-          new Date(event.end?.dateTime ?? Date.now())
-        );
-
-        const stillGone = !secondRead.events.find(
-          (e) => e.id === event.id && e.status !== "cancelled"
-        );
-
-        if (stillGone) {
-          await db
-            .update(dk_reservations)
-            .set({ status: "cancelled", cancelled_at: new Date(), updated_at: new Date() })
-            .where(eq(dk_reservations.id, reservation.id));
-
-          await db.insert(dk_reservation_events).values({
-            reservation_id: reservation.id,
-            actor: "google",
-            type: "cancelled",
-            to_json: JSON.stringify({ reason: "Google Calendar event deleted" }),
-          });
-
-          await notifyReservationChange({
-            reservation: { ...reservation, status: "cancelled" },
-            kind: "cancelled",
-            changedBy: "technik (Google kalendář)",
-          });
-
-          report.push({
-            technician: tech.display_name,
-            reservation_id: reservation.id,
-            action: "cancelled_from_gcal",
-          });
-        }
-        continue;
-      }
-
-      // Time change
-      const gcalStart = event.start?.dateTime;
-      if (gcalStart) {
-        const gcalStartDt = new Date(gcalStart);
-        const diff = Math.abs(
-          gcalStartDt.getTime() - reservation.starts_at.getTime()
-        );
-
-        if (diff > 60_000) {
-          // More than 1 minute difference — technician moved it
-          const oldStart = reservation.starts_at;
-          await db
-            .update(dk_reservations)
-            .set({
-              starts_at: gcalStartDt,
-              google_etag: event.etag ?? null,
-              updated_at: new Date(),
-            })
-            .where(eq(dk_reservations.id, reservation.id));
-
-          await db.insert(dk_reservation_events).values({
-            reservation_id: reservation.id,
-            actor: "google",
-            type: "rescheduled",
-            from_json: JSON.stringify({ starts_at: oldStart }),
-            to_json: JSON.stringify({ starts_at: gcalStartDt }),
-          });
-
-          await notifyReservationChange({
-            reservation: { ...reservation, starts_at: gcalStartDt },
-            kind: "rescheduled",
-            oldStartsAt: oldStart,
-            changedBy: "technik (Google kalendář)",
-          });
-
-          report.push({
-            technician: tech.display_name,
-            reservation_id: reservation.id,
-            action: "rescheduled_from_gcal",
-            old_start: oldStart,
-            new_start: gcalStartDt,
-          });
-        }
-      }
     }
 
     // Renew watch channel if expiring within 48 hours

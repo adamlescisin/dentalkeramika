@@ -13,6 +13,7 @@ const NAV: ({ href: string; label: string; exact?: boolean } | null)[] = [
   { href: "/admin/ordinace",     label: "Ordinace" },
   { href: "/admin/vsechny-rezervace", label: "Všechny rezervace" },
   { href: "/admin/rezervace",    label: "Čekající rezervace" },
+  { href: "/admin/migrace",      label: "Migrace rezervací" },
   null,
   { href: "/admin/nastaveni",    label: "Nastavení" },
 ];
